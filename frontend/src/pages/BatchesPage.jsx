@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Eye, Download, Trash2, RefreshCw, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
+import { Eye, Download, Trash2, RefreshCw, Clock, CheckCircle, XCircle, Loader, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { uploadAPI } from '../services/api';
 import { format } from 'date-fns';
 
@@ -10,17 +10,29 @@ const BatchesPage = () => {
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, limit: 20, offset: 0, hasMore: false });
+  const itemsPerPage = 20;
 
   useEffect(() => {
     loadBatches();
-  }, []);
+  }, [currentPage, searchTerm, statusFilter]);
 
   const loadBatches = async () => {
     try {
       setLoading(true);
-      const response = await uploadAPI.getBatches({ limit: 50, offset: 0 });
+      const offset = (currentPage - 1) * itemsPerPage;
+      const response = await uploadAPI.getBatches({
+        limit: itemsPerPage,
+        offset,
+        search: searchTerm,
+        status: statusFilter
+      });
       if (response.success) {
         setBatches(response.data);
+        setPagination(response.pagination);
       }
     } catch (error) {
       toast.error('Failed to load batches');
@@ -87,6 +99,8 @@ const BatchesPage = () => {
     );
   }
 
+  const totalPages = Math.ceil(pagination.total / itemsPerPage);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -94,7 +108,7 @@ const BatchesPage = () => {
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Processing Batches</h2>
           <p className="mt-2 text-gray-600">
-            View and manage your PDF processing batches
+            View and manage your PDF processing batches ({pagination.total} total)
           </p>
         </div>
         <button
@@ -106,6 +120,43 @@ const BatchesPage = () => {
           <RefreshCw className={`h-5 w-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
         </button>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by batch name..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Batches List */}
@@ -217,6 +268,34 @@ const BatchesPage = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, pagination.total)} of {pagination.total} batches
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <span className="px-4 py-2 text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Download, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCw, CheckCircle, XCircle, Clock, RotateCcw, FileText, FileJson, AlertCircle } from 'lucide-react';
 import { uploadAPI } from '../services/api';
 import { format } from 'date-fns';
 
@@ -48,6 +48,34 @@ const BatchDetailsPage = () => {
   const handleDownload = () => {
     uploadAPI.downloadExcel(batchId);
     toast.success('Download started');
+  };
+
+  const handleRetryBatch = async () => {
+    if (!confirm('Retry all failed files in this batch?')) return;
+
+    try {
+      const response = await uploadAPI.retryBatch(batchId, { useAI: true });
+      if (response.success) {
+        toast.success(response.message);
+        loadBatchDetails();
+      }
+    } catch (error) {
+      toast.error('Failed to retry batch');
+    }
+  };
+
+  const handleRetrySingleFile = async (fileId, filename) => {
+    if (!confirm(`Retry processing for ${filename}?`)) return;
+
+    try {
+      const response = await uploadAPI.retrySingleFile(batchId, fileId, { useAI: true });
+      if (response.success) {
+        toast.success(`Retrying ${filename}`);
+        loadBatchDetails();
+      }
+    } catch (error) {
+      toast.error('Failed to retry file');
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -113,14 +141,61 @@ const BatchDetailsPage = () => {
           >
             <RefreshCw className={`h-5 w-5 ${autoRefresh ? 'animate-spin' : ''}`} />
           </button>
-          {batch.excel_file_path && (
+          {batch.failed_files > 0 && (
             <button
-              onClick={handleDownload}
-              className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg
-                       hover:bg-green-700 transition-colors"
+              onClick={handleRetryBatch}
+              className="flex items-center px-6 py-2 bg-orange-600 text-white rounded-lg
+                       hover:bg-orange-700 transition-colors"
             >
-              <Download className="h-5 w-5 mr-2" />
-              Download Excel
+              <RotateCcw className="h-5 w-5 mr-2" />
+              Retry Failed ({batch.failed_files})
+            </button>
+          )}
+          {batch.excel_file_path && (
+            <>
+              <button
+                onClick={handleDownload}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg
+                         hover:bg-green-700 transition-colors"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Excel
+              </button>
+              <button
+                onClick={() => {
+                  uploadAPI.downloadCSV(batchId);
+                  toast.success('CSV download started');
+                }}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg
+                         hover:bg-blue-700 transition-colors"
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                CSV
+              </button>
+              <button
+                onClick={() => {
+                  uploadAPI.downloadJSON(batchId);
+                  toast.success('JSON download started');
+                }}
+                className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg
+                         hover:bg-purple-700 transition-colors"
+              >
+                <FileJson className="h-4 w-4 mr-1" />
+                JSON
+              </button>
+            </>
+          )}
+          {batch.failed_files > 0 && (
+            <button
+              onClick={() => {
+                uploadAPI.downloadErrorReport(batchId);
+                toast.success('Error report download started');
+              }}
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg
+                       hover:bg-red-700 transition-colors"
+            >
+              <AlertCircle className="h-4 w-4 mr-1" />
+              Errors
             </button>
           )}
         </div>
@@ -202,6 +277,9 @@ const BatchDetailsPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Error
                 </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -223,6 +301,18 @@ const BatchDetailsPage = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-red-600">
                     {record.error_message || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    {record.status === 'failed' && (
+                      <button
+                        onClick={() => handleRetrySingleFile(record.id, record.filename)}
+                        className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+                        title="Retry this file"
+                      >
+                        <RotateCcw className="h-4 w-4 inline mr-1" />
+                        Retry
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

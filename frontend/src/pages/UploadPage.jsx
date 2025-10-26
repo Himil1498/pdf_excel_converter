@@ -47,8 +47,19 @@ const UploadPage = () => {
       return;
     }
 
-    setFiles(prev => [...prev, ...pdfFiles]);
-    toast.success(`${pdfFiles.length} file(s) added`);
+    // Check for duplicates
+    const existingNames = new Set(files.map(f => f.name));
+    const duplicates = pdfFiles.filter(file => existingNames.has(file.name));
+    const newFiles = pdfFiles.filter(file => !existingNames.has(file.name));
+
+    if (duplicates.length > 0) {
+      toast.error(`${duplicates.length} duplicate file(s) skipped`);
+    }
+
+    if (newFiles.length > 0) {
+      setFiles(prev => [...prev, ...newFiles]);
+      toast.success(`${newFiles.length} file(s) added`);
+    }
   }, [files]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -72,6 +83,16 @@ const UploadPage = () => {
 
     if (!batchName.trim()) {
       toast.error('Please enter a batch name');
+      return;
+    }
+
+    if (batchName.length < 3) {
+      toast.error('Batch name must be at least 3 characters');
+      return;
+    }
+
+    if (batchName.length > 100) {
+      toast.error('Batch name must be less than 100 characters');
       return;
     }
 

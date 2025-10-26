@@ -50,7 +50,28 @@ export const uploadAPI = {
     window.open(url, '_blank');
   },
 
+  downloadCSV: (batchId) => {
+    const url = `${API_BASE_URL}/batches/${batchId}/download/csv`;
+    window.open(url, '_blank');
+  },
+
+  downloadJSON: (batchId) => {
+    const url = `${API_BASE_URL}/batches/${batchId}/download/json`;
+    window.open(url, '_blank');
+  },
+
+  downloadErrorReport: (batchId) => {
+    const url = `${API_BASE_URL}/batches/${batchId}/download/errors`;
+    window.open(url, '_blank');
+  },
+
   deleteBatch: (batchId) => api.delete(`/batches/${batchId}`),
+
+  bulkDeleteBatches: (batchIds) => api.post('/batches/bulk-delete', { batchIds }),
+
+  retryBatch: (batchId, options = {}) => api.post(`/batches/${batchId}/retry`, options),
+
+  retrySingleFile: (batchId, fileId, options = {}) => api.post(`/batches/${batchId}/files/${fileId}/retry`, options),
 };
 
 export const templateAPI = {
@@ -71,6 +92,13 @@ export const templateAPI = {
   updateCustomField: (fieldId, data) => api.put(`/custom-fields/${fieldId}`, data),
 
   deleteCustomField: (fieldId) => api.delete(`/custom-fields/${fieldId}`),
+
+  exportTemplate: (templateId) => {
+    const url = `${API_BASE_URL}/templates/${templateId}/export`;
+    window.open(url, '_blank');
+  },
+
+  importTemplate: (templateData) => api.post('/templates/import', { templateData }),
 };
 
 export default api;

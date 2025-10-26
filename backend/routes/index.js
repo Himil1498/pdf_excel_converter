@@ -33,8 +33,26 @@ router.get('/batches/:batchId', UploadController.getBatchDetails);
 // Download Excel file
 router.get('/batches/:batchId/download', UploadController.downloadExcel);
 
+// Download CSV file
+router.get('/batches/:batchId/download/csv', UploadController.downloadCSV);
+
+// Download JSON file
+router.get('/batches/:batchId/download/json', UploadController.downloadJSON);
+
+// Download error report
+router.get('/batches/:batchId/download/errors', UploadController.downloadErrorReport);
+
 // Delete batch
 router.delete('/batches/:batchId', UploadController.deleteBatch);
+
+// Bulk delete batches
+router.post('/batches/bulk-delete', UploadController.bulkDeleteBatches);
+
+// Retry failed files in batch
+router.post('/batches/:batchId/retry', UploadController.retryBatch);
+
+// Retry single failed file
+router.post('/batches/:batchId/files/:fileId/retry', UploadController.retrySingleFile);
 
 // ===== TEMPLATE ROUTES =====
 
@@ -66,5 +84,13 @@ router.put('/custom-fields/:fieldId', TemplateController.updateCustomField);
 
 // Delete custom field
 router.delete('/custom-fields/:fieldId', TemplateController.deleteCustomField);
+
+// ===== TEMPLATE IMPORT/EXPORT ROUTES =====
+
+// Export template
+router.get('/templates/:templateId/export', TemplateController.exportTemplate);
+
+// Import template
+router.post('/templates/import', TemplateController.importTemplate);
 
 module.exports = router;

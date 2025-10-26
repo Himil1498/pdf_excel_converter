@@ -11,7 +11,8 @@
       "Bash(taskkill /PID 1060 /F)",
       "Bash(cmd.exe //c \"taskkill /PID 1060 /F\")",
       "Bash(taskkill:*)",
-      "Bash(cmd.exe //c \"taskkill /F /IM node.exe\")"
+      "Bash(cmd.exe //c \"taskkill /F /IM node.exe\")",
+      "Bash(timeout 5 bash:*)"
     ],
     "deny": [],
     "ask": []

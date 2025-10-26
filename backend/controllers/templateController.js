@@ -363,6 +363,119 @@ class TemplateController {
       });
     }
   }
+
+  /**
+   * Export template as JSON
+   */
+  static async exportTemplate(req, res) {
+    try {
+      const { templateId } = req.params;
+
+      const templates = await db.query(
+        'SELECT * FROM field_templates WHERE id = ?',
+        [templateId]
+      );
+
+      if (templates.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Template not found'
+        });
+      }
+
+      const template = templates[0];
+
+      // Parse field mappings if it's a string
+      const exportData = {
+        templateName: template.template_name,
+        vendorName: template.vendor_name,
+        fieldMappings: typeof template.field_mappings === 'string'
+          ? JSON.parse(template.field_mappings)
+          : template.field_mappings,
+        isDefault: template.is_default,
+        version: '1.0',
+        exportedAt: new Date().toISOString()
+      };
+
+      const json = JSON.stringify(exportData, null, 2);
+      const filename = `template_${template.template_name.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(json);
+
+    } catch (error) {
+      console.error('Export template error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to export template',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Import template from JSON
+   */
+  static async importTemplate(req, res) {
+    try {
+      const { templateData } = req.body;
+
+      if (!templateData) {
+        return res.status(400).json({
+          success: false,
+          message: 'No template data provided'
+        });
+      }
+
+      // Validate template data
+      if (!templateData.templateName || !templateData.fieldMappings) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid template format'
+        });
+      }
+
+      // Check if template name already exists
+      const existing = await db.query(
+        'SELECT id FROM field_templates WHERE template_name = ?',
+        [templateData.templateName]
+      );
+
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Template with this name already exists'
+        });
+      }
+
+      // Insert template
+      const result = await db.query(
+        `INSERT INTO field_templates (template_name, vendor_name, field_mappings, is_default)
+         VALUES (?, ?, ?, ?)`,
+        [
+          templateData.templateName,
+          templateData.vendorName || null,
+          JSON.stringify(templateData.fieldMappings),
+          templateData.isDefault || false
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Template imported successfully',
+        templateId: result.insertId
+      });
+
+    } catch (error) {
+      console.error('Import template error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to import template',
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = TemplateController;

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import { templateAPI } from '../services/api';
+import TemplateModal from '../components/TemplateModal';
+import CustomFieldModal from '../components/CustomFieldModal';
 
 const TemplatesPage = () => {
   const [templates, setTemplates] = useState([]);
@@ -30,6 +32,40 @@ const TemplatesPage = () => {
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveTemplate = async (templateData) => {
+    try {
+      if (editingTemplate) {
+        await templateAPI.updateTemplate(editingTemplate.id, templateData);
+        toast.success('Template updated successfully');
+      } else {
+        await templateAPI.createTemplate(templateData);
+        toast.success('Template created successfully');
+      }
+      setShowTemplateModal(false);
+      setEditingTemplate(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.message || 'Failed to save template');
+    }
+  };
+
+  const handleSaveField = async (fieldData) => {
+    try {
+      if (editingField) {
+        await templateAPI.updateCustomField(editingField.id, fieldData);
+        toast.success('Field updated successfully');
+      } else {
+        await templateAPI.createCustomField(fieldData);
+        toast.success('Field created successfully');
+      }
+      setShowFieldModal(false);
+      setEditingField(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.message || 'Failed to save field');
     }
   };
 
@@ -247,6 +283,27 @@ const TemplatesPage = () => {
           <li>• AI extraction can work without templates for better accuracy</li>
         </ul>
       </div>
+
+      {/* Modals */}
+      <TemplateModal
+        isOpen={showTemplateModal}
+        onClose={() => {
+          setShowTemplateModal(false);
+          setEditingTemplate(null);
+        }}
+        onSave={handleSaveTemplate}
+        template={editingTemplate}
+      />
+
+      <CustomFieldModal
+        isOpen={showFieldModal}
+        onClose={() => {
+          setShowFieldModal(false);
+          setEditingField(null);
+        }}
+        onSave={handleSaveField}
+        field={editingField}
+      />
     </div>
   );
 };

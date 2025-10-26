@@ -19,11 +19,26 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true);
-  } else {
+  // Check MIME type
+  if (file.mimetype !== 'application/pdf') {
     cb(new Error('Only PDF files are allowed'), false);
+    return;
   }
+
+  // Check file extension
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ext !== '.pdf') {
+    cb(new Error('File must have .pdf extension'), false);
+    return;
+  }
+
+  // Check filename for suspicious patterns
+  if (file.originalname.includes('..') || file.originalname.includes('/') || file.originalname.includes('\\')) {
+    cb(new Error('Invalid filename'), false);
+    return;
+  }
+
+  cb(null, true);
 };
 
 const upload = multer({
@@ -57,6 +72,19 @@ class UploadController {
         return res.status(400).json({
           success: false,
           message: 'No files uploaded'
+        });
+      }
+
+      // Check for duplicate batch name
+      const existing = await db.query(
+        'SELECT id FROM upload_batches WHERE batch_name = ?',
+        [batchName]
+      );
+
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Batch name already exists. Please use a unique name.'
         });
       }
 
@@ -153,32 +181,60 @@ class UploadController {
   }
 
   /**
-   * Get all batches
+   * Get all batches with pagination and search
    */
   static async getAllBatches(req, res) {
     try {
-      const { limit = 50, offset = 0 } = req.query;
+      const {
+        limit = 50,
+        offset = 0,
+        search = '',
+        status = '',
+        sortBy = 'created_at',
+        sortOrder = 'DESC'
+      } = req.query;
 
       // Ensure limit and offset are valid integers
       const limitInt = Math.max(1, Math.min(parseInt(limit) || 50, 1000));
       const offsetInt = Math.max(0, parseInt(offset) || 0);
 
-      // Use direct SQL instead of prepared statement for LIMIT/OFFSET
-      const sql = `SELECT * FROM upload_batches
-         ORDER BY created_at DESC
-         LIMIT ${limitInt} OFFSET ${offsetInt}`;
+      // Build WHERE clause
+      const conditions = [];
+      const params = [];
 
-      const batches = await db.query(sql);
+      if (search) {
+        conditions.push('batch_name LIKE ?');
+        params.push(`%${search}%`);
+      }
 
-      const total = await db.query('SELECT COUNT(*) as count FROM upload_batches');
+      if (status && ['pending', 'processing', 'completed', 'failed'].includes(status)) {
+        conditions.push('status = ?');
+        params.push(status);
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      // Validate sort parameters
+      const validSortFields = ['created_at', 'batch_name', 'total_files', 'status'];
+      const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
+      const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+      // Get batches
+      const sql = `SELECT * FROM upload_batches ${whereClause} ORDER BY ${sortField} ${order} LIMIT ${limitInt} OFFSET ${offsetInt}`;
+      const batches = await db.query(sql, params);
+
+      // Get total count
+      const countSql = `SELECT COUNT(*) as count FROM upload_batches ${whereClause}`;
+      const total = await db.query(countSql, params);
 
       res.json({
         success: true,
         data: batches,
         pagination: {
           total: total[0].count,
-          limit: parseInt(limit),
-          offset: parseInt(offset)
+          limit: limitInt,
+          offset: offsetInt,
+          hasMore: offsetInt + batches.length < total[0].count
         }
       });
 
@@ -228,6 +284,188 @@ class UploadController {
       res.status(500).json({
         success: false,
         message: 'Failed to download Excel file',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Download CSV file
+   */
+  static async downloadCSV(req, res) {
+    try {
+      const { batchId } = req.params;
+
+      const batches = await db.query(
+        'SELECT * FROM upload_batches WHERE id = ?',
+        [batchId]
+      );
+
+      if (batches.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Batch not found'
+        });
+      }
+
+      // Get all invoice data
+      const invoiceData = await db.query(
+        'SELECT * FROM invoice_data WHERE batch_id = ?',
+        [batchId]
+      );
+
+      if (invoiceData.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'No data available for export'
+        });
+      }
+
+      // Generate CSV
+      const headers = Object.keys(invoiceData[0]).filter(key => key !== 'id');
+      const csvRows = [headers.join(',')];
+
+      for (const row of invoiceData) {
+        const values = headers.map(header => {
+          const value = row[header];
+          // Escape commas and quotes
+          if (value === null || value === undefined) return '';
+          const escaped = String(value).replace(/"/g, '""');
+          return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+
+      const csv = csvRows.join('\n');
+      const filename = `batch_${batchId}_export.csv`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csv);
+
+    } catch (error) {
+      console.error('Download CSV error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to download CSV file',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Download JSON file
+   */
+  static async downloadJSON(req, res) {
+    try {
+      const { batchId } = req.params;
+
+      const batches = await db.query(
+        'SELECT * FROM upload_batches WHERE id = ?',
+        [batchId]
+      );
+
+      if (batches.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Batch not found'
+        });
+      }
+
+      // Get all invoice data
+      const invoiceData = await db.query(
+        'SELECT * FROM invoice_data WHERE batch_id = ?',
+        [batchId]
+      );
+
+      if (invoiceData.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'No data available for export'
+        });
+      }
+
+      const json = JSON.stringify({
+        batch: batches[0],
+        data: invoiceData,
+        exportedAt: new Date().toISOString(),
+        totalRecords: invoiceData.length
+      }, null, 2);
+
+      const filename = `batch_${batchId}_export.json`;
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(json);
+
+    } catch (error) {
+      console.error('Download JSON error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to download JSON file',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Download error report
+   */
+  static async downloadErrorReport(req, res) {
+    try {
+      const { batchId } = req.params;
+
+      const batches = await db.query(
+        'SELECT * FROM upload_batches WHERE id = ?',
+        [batchId]
+      );
+
+      if (batches.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Batch not found'
+        });
+      }
+
+      // Get failed files
+      const failedFiles = await db.query(
+        'SELECT id, filename, status, error_message, created_at, updated_at FROM pdf_records WHERE batch_id = ? AND status = ?',
+        [batchId, 'failed']
+      );
+
+      if (failedFiles.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'No failed files to report'
+        });
+      }
+
+      // Generate CSV error report
+      const headers = ['File ID', 'Filename', 'Error Message', 'Failed At'];
+      const csvRows = [headers.join(',')];
+
+      for (const file of failedFiles) {
+        const values = [
+          file.id,
+          `"${file.filename}"`,
+          `"${(file.error_message || 'Unknown error').replace(/"/g, '""')}"`,
+          `"${file.updated_at}"`
+        ];
+        csvRows.push(values.join(','));
+      }
+
+      const csv = csvRows.join('\n');
+      const filename = `batch_${batchId}_errors.csv`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csv);
+
+    } catch (error) {
+      console.error('Download error report error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to download error report',
         error: error.message
       });
     }
@@ -339,6 +577,207 @@ class UploadController {
       res.status(500).json({
         success: false,
         message: 'Failed to delete batch',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Retry all failed files in batch
+   */
+  static async retryBatch(req, res) {
+    try {
+      const { batchId } = req.params;
+      const { useAI = true, templateId = null } = req.body;
+
+      // Get batch info
+      const batches = await db.query(
+        'SELECT * FROM upload_batches WHERE id = ?',
+        [batchId]
+      );
+
+      if (batches.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Batch not found'
+        });
+      }
+
+      // Get failed files
+      const failedFiles = await db.query(
+        'SELECT * FROM pdf_records WHERE batch_id = ? AND status = ?',
+        [batchId, 'failed']
+      );
+
+      if (failedFiles.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No failed files to retry'
+        });
+      }
+
+      // Reset failed files to pending
+      await db.query(
+        'UPDATE pdf_records SET status = ?, error_message = NULL WHERE batch_id = ? AND status = ?',
+        ['pending', batchId, 'failed']
+      );
+
+      // Update batch status
+      await db.query(
+        'UPDATE upload_batches SET status = ?, failed_files = 0 WHERE id = ?',
+        ['processing', batchId]
+      );
+
+      // Restart processing
+      UploadController.processAsync(batchId, failedFiles, {
+        useAI: useAI === 'true' || useAI === true,
+        templateId: templateId ? parseInt(templateId) : null
+      });
+
+      res.json({
+        success: true,
+        message: `Retrying ${failedFiles.length} failed file(s)`,
+        count: failedFiles.length
+      });
+
+    } catch (error) {
+      console.error('Retry batch error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retry batch',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Bulk delete batches
+   */
+  static async bulkDeleteBatches(req, res) {
+    try {
+      const { batchIds } = req.body;
+
+      if (!batchIds || !Array.isArray(batchIds) || batchIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No batch IDs provided'
+        });
+      }
+
+      let deletedCount = 0;
+      const errors = [];
+
+      for (const batchId of batchIds) {
+        try {
+          // Get batch info
+          const batches = await db.query(
+            'SELECT * FROM upload_batches WHERE id = ?',
+            [batchId]
+          );
+
+          if (batches.length === 0) {
+            errors.push(`Batch ${batchId} not found`);
+            continue;
+          }
+
+          // Get PDF records to delete files
+          const pdfRecords = await db.query(
+            'SELECT file_path FROM pdf_records WHERE batch_id = ?',
+            [batchId]
+          );
+
+          // Delete PDF files
+          for (const record of pdfRecords) {
+            try {
+              await fs.unlink(record.file_path);
+            } catch (err) {
+              console.warn(`Failed to delete file: ${record.file_path}`);
+            }
+          }
+
+          // Delete Excel file if exists
+          const batch = batches[0];
+          if (batch.excel_file_path) {
+            try {
+              await fs.unlink(batch.excel_file_path);
+            } catch (err) {
+              console.warn(`Failed to delete Excel file: ${batch.excel_file_path}`);
+            }
+          }
+
+          // Delete batch
+          await db.query('DELETE FROM upload_batches WHERE id = ?', [batchId]);
+          deletedCount++;
+
+        } catch (error) {
+          console.error(`Error deleting batch ${batchId}:`, error);
+          errors.push(`Failed to delete batch ${batchId}: ${error.message}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `${deletedCount} batch(es) deleted successfully`,
+        deletedCount,
+        errors: errors.length > 0 ? errors : undefined
+      });
+
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to bulk delete batches',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Retry single failed file
+   */
+  static async retrySingleFile(req, res) {
+    try {
+      const { batchId, fileId } = req.params;
+      const { useAI = true, templateId = null } = req.body;
+
+      // Get file record
+      const files = await db.query(
+        'SELECT * FROM pdf_records WHERE id = ? AND batch_id = ?',
+        [fileId, batchId]
+      );
+
+      if (files.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'File not found'
+        });
+      }
+
+      const file = files[0];
+
+      // Reset file status
+      await db.query(
+        'UPDATE pdf_records SET status = ?, error_message = NULL WHERE id = ?',
+        ['pending', fileId]
+      );
+
+      // Process single file
+      UploadController.processAsync(batchId, [file], {
+        useAI: useAI === 'true' || useAI === true,
+        templateId: templateId ? parseInt(templateId) : null
+      });
+
+      res.json({
+        success: true,
+        message: 'File retry started',
+        filename: file.filename
+      });
+
+    } catch (error) {
+      console.error('Retry file error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retry file',
         error: error.message
       });
     }
