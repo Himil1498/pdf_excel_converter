@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import openpyxl; wb = openpyxl.load_workbook(r''C:\\Users\\hkcha\\OneDrive\\Desktop\\PDF_EXCEL_CONVERT_APP\\Vodafone BW-Sep''\\''''2025.xlsx''); ws = wb.active; print(''Sheet name:'', wb.sheetnames[0]); print(''\\nHeaders:''); [print(f''Column {chr(65+i)}: {ws.cell(1, i+1).value}'') for i in range(ws.max_column)]; print(''\\nSample data (row 2):''); [print(f''Column {chr(65+i)}: {ws.cell(2, i+1).value}'') for i in range(ws.max_column)]\")",
+      "Bash(python read_excel.py)",
+      "Bash(del read_excel.py)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /PID 1060 /F)",
+      "Bash(cmd.exe //c \"taskkill /PID 1060 /F\")",
+      "Bash(taskkill:*)",
+      "Bash(cmd.exe //c \"taskkill /F /IM node.exe\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
