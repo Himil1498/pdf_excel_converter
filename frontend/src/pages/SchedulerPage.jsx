@@ -282,7 +282,7 @@ export default function SchedulerPage() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Create Scheduled Job</h3>
             </div>
 
@@ -296,7 +296,9 @@ export default function SchedulerPage() {
                   value={newJob.job_name}
                   onChange={(e) => setNewJob({ ...newJob, job_name: e.target.value })}
                   placeholder="e.g., Daily Invoice Processing"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                           dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
@@ -307,7 +309,9 @@ export default function SchedulerPage() {
                 <select
                   value={newJob.cron_schedule}
                   onChange={(e) => setNewJob({ ...newJob, cron_schedule: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                           dark:bg-gray-700 dark:text-white"
                 >
                   {cronPresets.map((preset) => (
                     <option key={preset.value} value={preset.value}>
@@ -329,7 +333,9 @@ export default function SchedulerPage() {
                   value={newJob.source_folder}
                   onChange={(e) => setNewJob({ ...newJob, source_folder: e.target.value })}
                   placeholder="e.g., C:\Invoices\ToProcess"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                           dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Folder where PDFs will be automatically picked up
@@ -345,7 +351,9 @@ export default function SchedulerPage() {
                   value={newJob.batch_name_prefix}
                   onChange={(e) => setNewJob({ ...newJob, batch_name_prefix: e.target.value })}
                   placeholder="e.g., Auto-"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                           dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Prefix for automatically generated batch names
