@@ -113,7 +113,7 @@ export default function ComparisonPage() {
 
       {/* Search Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Search Invoice</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Search Invoice</h3>
         <div className="flex gap-3">
           <input
             type="text"
@@ -121,12 +121,15 @@ export default function ComparisonPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Search by circuit ID, bill number, or customer name..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                     dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
           <button
             onClick={handleSearch}
             disabled={loading}
-            className= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-primary-400 dark:focus:border-primary-400"flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+            className="flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg
+                     hover:bg-primary-700 transition-colors disabled:opacity-50"
           >
             <Search className="w-5 h-5 mr-2" />
             Search
