@@ -307,7 +307,7 @@ export default function SchedulerPage() {
                 <select
                   value={newJob.cron_schedule}
                   onChange={(e) => setNewJob({ ...newJob, cron_schedule: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white"
                 >
                   {cronPresets.map((preset) => (
                     <option key={preset.value} value={preset.value}>
@@ -315,7 +315,7 @@ export default function SchedulerPage() {
                     </option>
                   ))}
                 </select>
-                <p className= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Cron expression: {newJob.cron_schedule}
                 </p>
               </div>
