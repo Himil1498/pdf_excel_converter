@@ -356,12 +356,14 @@ export default function CorrectionPage() {
                           type={field.type}
                           value={getFieldValue(field.name)}
                           onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                          className= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-primary-400 dark:focus:border-primary-400"w-full px-3 py-2 border border-primary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                          className="w-full px-3 py-2 border border-primary-300 rounded-md
+                                   focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                                   dark:bg-gray-700 dark:text-white dark:border-gray-600"
                           autoFocus
                         />
                       ) : (
-                        <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-900 dark:text-white">
-                          {getFieldValue(field.name) || <span className="text-gray-400">No data</span>}
+                        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-md text-gray-900 dark:text-white">
+                          {getFieldValue(field.name) || <span className="text-gray-400 dark:text-gray-500">No data</span>}
                         </div>
                       )}
                     </div>
