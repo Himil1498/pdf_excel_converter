@@ -288,20 +288,20 @@ export default function SchedulerPage() {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Job Name *
                 </label>
                 <input
                   type="text"
                   value={newJob.job_name}
                   onChange={(e) => setNewJob({ ...newJob, job_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
-                  placeholder= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"e.g., Daily Invoice Processing"
+                  placeholder="e.g., Daily Invoice Processing"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Schedule *
                 </label>
                 <select
@@ -321,15 +321,15 @@ export default function SchedulerPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Source Folder Path *
                 </label>
                 <input
                   type="text"
                   value={newJob.source_folder}
                   onChange={(e) => setNewJob({ ...newJob, source_folder: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
-                  placeholder= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"e.g., C:\Invoices\ToProcess"
+                  placeholder="e.g., C:\Invoices\ToProcess"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Folder where PDFs will be automatically picked up
@@ -337,15 +337,15 @@ export default function SchedulerPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Batch Name Prefix (Optional)
                 </label>
                 <input
                   type="text"
                   value={newJob.batch_name_prefix}
                   onChange={(e) => setNewJob({ ...newJob, batch_name_prefix: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
-                  placeholder= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"e.g., Auto-"
+                  placeholder="e.g., Auto-"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Prefix for automatically generated batch names
