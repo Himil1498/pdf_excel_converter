@@ -108,7 +108,7 @@ export default function ValidationPage() {
         <div className="flex items-center">
           <button
             onClick={() => navigate(`/batches/${batchId}`)}
-            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-6 w-6 text-gray-600 dark:text-gray-300" />
           </button>
@@ -124,7 +124,7 @@ export default function ValidationPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Total Validations</p>
@@ -136,7 +136,7 @@ export default function ValidationPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Errors</p>
@@ -148,7 +148,7 @@ export default function ValidationPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Warnings</p>
@@ -160,7 +160,7 @@ export default function ValidationPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Passed</p>
@@ -175,7 +175,7 @@ export default function ValidationPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-4">
         <div className="flex items-center gap-4">
           <Filter className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           <div className="flex gap-2">
@@ -204,22 +204,22 @@ export default function ValidationPage() {
       {/* Validation Results */}
       <div className="space-y-4">
         {Object.keys(groupedValidation).length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-12 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 mb-2">All Validations Passed!</p>
-            <p className="text-gray-600 dark:text-gray-300">No validation errors or warnings found.</p>
+            <p className="text-gray-600 dark:text-gray-300 dark:text-gray-300">No validation errors or warnings found.</p>
           </div>
         ) : (
           Object.entries(groupedValidation).map(([filename, items]) => (
-            <div key={filename} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 dark:bg-gray-900">
+            <div key={filename} className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <h3 className="font-semibold text-gray-900 dark:text-white">{filename}</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {items.length} validation {items.length === 1 ? 'issue' : 'issues'}
                 </p>
               </div>
 
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
                 {items.map((item, index) => (
                   <div
                     key={index}

@@ -30,7 +30,7 @@ const ConfirmDialog = ({
 
       {/* Dialog */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all">
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-md w-full p-6 transform transition-all">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -58,8 +58,8 @@ const ConfirmDialog = ({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200
-                       hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 font-medium transition-colors"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200
+                       hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:bg-gray-700 dark:bg-gray-800 font-medium transition-colors"
             >
               {cancelText}
             </button>

@@ -176,7 +176,7 @@ export default function CorrectionPage() {
     return (
       <div className="text-center py-12">
         <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500 mb-4">No invoices available for correction</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">No invoices available for correction</p>
         <button
           onClick={() => navigate(`/batches/${batchId}`)}
           className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
@@ -194,7 +194,7 @@ export default function CorrectionPage() {
         <div className="flex items-center">
           <button
             onClick={() => navigate(`/batches/${batchId}`)}
-            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-6 w-6 text-gray-600 dark:text-gray-300" />
           </button>
@@ -226,23 +226,23 @@ export default function CorrectionPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Total Invoices</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{invoices.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Current Invoice</p>
           <p className="text-2xl font-bold text-primary-600">
             {selectedInvoice ? invoices.findIndex(inv => inv.id === selectedInvoice.id) + 1 : 0}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Corrections Made</p>
           <p className="text-2xl font-bold text-orange-600">
             {Object.keys(corrections[selectedInvoice?.id] || {}).length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Total Corrections</p>
           <p className="text-2xl font-bold text-green-600">
             {Object.values(corrections).reduce((sum, inv) => sum + Object.keys(inv).length, 0)}
@@ -253,8 +253,8 @@ export default function CorrectionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Invoice List */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 dark:bg-gray-900">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               <h3 className="font-semibold text-gray-900 dark:text-white">Invoices</h3>
             </div>
             <div className="overflow-y-auto max-h-[600px]">
@@ -264,7 +264,7 @@ export default function CorrectionPage() {
                   <button
                     key={invoice.id}
                     onClick={() => setSelectedInvoice(invoice)}
-                    className={`w-full text-left px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                    className={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                       selectedInvoice?.id === invoice.id ? 'bg-primary-50 border-l-4 border-l-primary-600' : ''
                     }`}
                   >
@@ -292,8 +292,8 @@ export default function CorrectionPage() {
 
         {/* Correction Form */}
         <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 dark:bg-gray-900">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 Edit Invoice Data
                 {selectedInvoice && (
@@ -308,7 +308,7 @@ export default function CorrectionPage() {
               {selectedInvoice ? (
                 <div className="space-y-4">
                   {editableFields.map(field => (
-                    <div key={field.name} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
+                    <div key={field.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-primary-300 transition-colors">
                       <div className="flex items-start justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                           {field.label}
@@ -356,7 +356,7 @@ export default function CorrectionPage() {
                           type={field.type}
                           value={getFieldValue(field.name)}
                           onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                          className="w-full px-3 py-2 border border-primary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-primary-400 dark:focus:border-primary-400"w-full px-3 py-2 border border-primary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
                           autoFocus
                         />
                       ) : (

@@ -71,15 +71,15 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-2xl w-full">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-lg">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             {field ? 'Edit Custom Field' : 'Create New Custom Field'}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
             <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
@@ -89,7 +89,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Field Name *
               </label>
               <input
@@ -98,7 +98,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                 value={formData.fieldName}
                 onChange={handleInputChange}
                 placeholder="e.g., Customer Reference"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 required
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -107,14 +107,14 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Field Type *
               </label>
               <select
                 name="fieldType"
                 value={formData.fieldType}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 required
               >
                 <option key="text" value="text">Text</option>
@@ -129,7 +129,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Excel Column Name *
             </label>
             <input
@@ -138,7 +138,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
               value={formData.excelColumnName}
               onChange={handleInputChange}
               placeholder="e.g., Customer Reference Number"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               required
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -147,7 +147,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Extraction Pattern (Optional)
             </label>
             <input
@@ -156,7 +156,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
               value={formData.extractionPattern}
               onChange={handleInputChange}
               placeholder="e.g., Customer\\s*Ref[:\.]\\s*([A-Z0-9]+)"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent font-mono text-sm dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Regex pattern to extract this field from PDFs. Leave empty to rely on AI extraction.
@@ -165,7 +165,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Display Order
               </label>
               <input
@@ -174,7 +174,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                 value={formData.displayOrder}
                 onChange={handleInputChange}
                 min="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Order in which field appears (0 = first)
@@ -188,7 +188,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleInputChange}
-                  className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-400"
                 />
                 <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                   Active
@@ -201,9 +201,9 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
           </div>
 
           {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h5 className="text-sm font-semibold text-blue-900 mb-2">Custom Field Tips</h5>
-            <ul className="text-xs text-blue-800 space-y-1">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Custom Field Tips</h5>
+            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
               <li>• Custom fields are added to the Excel output automatically</li>
               <li>• If no extraction pattern is provided, AI will attempt to find the value</li>
               <li>• Field type affects how the value is formatted in Excel</li>
@@ -216,7 +216,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>

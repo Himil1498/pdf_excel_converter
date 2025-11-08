@@ -135,7 +135,7 @@ export default function SchedulerPage() {
         <div className="flex gap-3">
           <button
             onClick={loadJobs}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className="w-5 h-5 mr-2" />
             Refresh
@@ -152,23 +152,23 @@ export default function SchedulerPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Total Jobs</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{jobs.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Active</p>
           <p className="text-2xl font-bold text-green-600">
             {jobs.filter(j => j.is_active && j.status === 'active').length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Paused</p>
           <p className="text-2xl font-bold text-orange-600">
             {jobs.filter(j => j.status === 'paused').length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">Completed Today</p>
           <p className="text-2xl font-bold text-blue-600">
             {jobs.filter(j => j.last_run && new Date(j.last_run).toDateString() === new Date().toDateString()).length}
@@ -177,8 +177,8 @@ export default function SchedulerPage() {
       </div>
 
       {/* Jobs List */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Scheduled Jobs</h3>
         </div>
 
@@ -194,9 +194,9 @@ export default function SchedulerPage() {
             <p className="text-sm">Create your first scheduled job to automate batch processing</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
             {jobs.map((job) => (
-              <div key={job.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={job.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -281,8 +281,8 @@ export default function SchedulerPage() {
       {/* Create Job Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Create Scheduled Job</h3>
             </div>
 
@@ -295,8 +295,8 @@ export default function SchedulerPage() {
                   type="text"
                   value={newJob.job_name}
                   onChange={(e) => setNewJob({ ...newJob, job_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="e.g., Daily Invoice Processing"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                  placeholder= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"e.g., Daily Invoice Processing"
                 />
               </div>
 
@@ -307,7 +307,7 @@ export default function SchedulerPage() {
                 <select
                   value={newJob.cron_schedule}
                   onChange={(e) => setNewJob({ ...newJob, cron_schedule: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
                 >
                   {cronPresets.map((preset) => (
                     <option key={preset.value} value={preset.value}>
@@ -315,7 +315,7 @@ export default function SchedulerPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Cron expression: {newJob.cron_schedule}
                 </p>
               </div>
@@ -328,8 +328,8 @@ export default function SchedulerPage() {
                   type="text"
                   value={newJob.source_folder}
                   onChange={(e) => setNewJob({ ...newJob, source_folder: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="e.g., C:\Invoices\ToProcess"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                  placeholder= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"e.g., C:\Invoices\ToProcess"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Folder where PDFs will be automatically picked up
@@ -344,8 +344,8 @@ export default function SchedulerPage() {
                   type="text"
                   value={newJob.batch_name_prefix}
                   onChange={(e) => setNewJob({ ...newJob, batch_name_prefix: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="e.g., Auto-"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                  placeholder= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"e.g., Auto-"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Prefix for automatically generated batch names
@@ -358,7 +358,7 @@ export default function SchedulerPage() {
                   id="is_active"
                   checked={newJob.is_active}
                   onChange={(e) => setNewJob({ ...newJob, is_active: e.target.checked })}
-                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-400"
                 />
                 <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700 dark:text-gray-200">
                   Start job immediately after creation
@@ -366,7 +366,7 @@ export default function SchedulerPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
               <button
                 onClick={() => {
                   setShowCreateModal(false);
@@ -378,7 +378,7 @@ export default function SchedulerPage() {
                     is_active: true
                   });
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>

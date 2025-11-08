@@ -103,7 +103,7 @@ export default function AlertsNotification() {
       {/* Bell Icon Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -115,9 +115,9 @@ export default function AlertsNotification() {
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 z-50 max-h-[600px] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               Notifications
               {unreadCount > 0 && (
@@ -126,7 +126,7 @@ export default function AlertsNotification() {
             </h3>
             <button
               onClick={() => setShowDropdown(false)}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-200"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200"
             >
               <X className="w-5 h-5" />
             </button>
@@ -145,11 +145,11 @@ export default function AlertsNotification() {
                 <p className="text-sm">No new notifications</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {alerts.map((alert) => (
                   <div
                     key={alert.id}
-                    className={`p-4 hover:bg-gray-50 transition-colors ${getSeverityColor(alert.severity)}`}
+                    className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${getSeverityColor(alert.severity)}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 mt-1">
@@ -212,7 +212,7 @@ export default function AlertsNotification() {
 
           {/* Footer */}
           {alerts.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50 text-center">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 text-center">
               <button
                 onClick={async () => {
                   try {

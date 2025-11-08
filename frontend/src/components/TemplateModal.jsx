@@ -121,15 +121,15 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             {template ? 'Edit Template' : 'Create New Template'}
           </h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
             <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
@@ -140,7 +140,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Template Name *
               </label>
               <input
@@ -149,13 +149,13 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                 value={formData.templateName}
                 onChange={handleInputChange}
                 placeholder="e.g., Vodafone Template"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Vendor Name
               </label>
               <input
@@ -164,7 +164,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                 value={formData.vendorName}
                 onChange={handleInputChange}
                 placeholder="e.g., Vodafone Idea"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               />
             </div>
           </div>
@@ -176,7 +176,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                 name="isDefault"
                 checked={formData.isDefault}
                 onChange={handleInputChange}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-400"
               />
               <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200">
                 Set as default template for this vendor
@@ -199,9 +199,9 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
 
             <div className="space-y-3">
               {mappingFields.map((field, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div className="flex-1">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                       Field Name
                     </label>
                     <input
@@ -213,12 +213,12 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                         setMappingFields(updatedFields);
                       }}
                       placeholder="e.g., invoice_number"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
                     />
                   </div>
 
                   <div className="flex-[2]">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                       Regex Pattern
                     </label>
                     <input
@@ -226,7 +226,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                       value={field.pattern}
                       onChange={(e) => handleMappingChange(index, e.target.value)}
                       placeholder="e.g., Invoice\\s*No[:\.]\\s*([A-Z0-9]+)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
                     />
                   </div>
 
@@ -257,9 +257,9 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
           </div>
 
           {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h5 className="text-sm font-semibold text-blue-900 mb-2">Regex Pattern Tips</h5>
-            <ul className="text-xs text-blue-800 space-y-1">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Regex Pattern Tips</h5>
+            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
               <li>• Use parentheses () to capture the value you want to extract</li>
               <li>• Use \\s for whitespace, \\d for digits, [A-Z0-9]+ for alphanumeric</li>
               <li>• Example: <code className="bg-blue-100 px-1 rounded">Invoice\\s*No[:\.]\\s*([A-Z0-9]+)</code></li>
@@ -272,7 +272,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>

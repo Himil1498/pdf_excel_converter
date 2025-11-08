@@ -116,7 +116,7 @@ const BatchDetailsPage = () => {
   if (!batch) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Batch not found</p>
+        <p className="text-gray-500 dark:text-gray-400 dark:text-gray-400">Batch not found</p>
         <button
           onClick={() => navigate('/batches')}
           className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
@@ -138,7 +138,7 @@ const BatchDetailsPage = () => {
         <div className="flex items-center">
           <button
             onClick={() => navigate('/batches')}
-            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-6 w-6 text-gray-600 dark:text-gray-300" />
           </button>
@@ -153,7 +153,7 @@ const BatchDetailsPage = () => {
             className={`px-4 py-2 border rounded-lg transition-colors ${
               autoRefresh
                 ? 'bg-primary-50 border-primary-300 text-primary-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             <RefreshCw className={`h-5 w-5 ${autoRefresh ? 'animate-spin' : ''}`} />
@@ -238,7 +238,7 @@ const BatchDetailsPage = () => {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Total Files</p>
@@ -247,7 +247,7 @@ const BatchDetailsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Processed</p>
@@ -257,7 +257,7 @@ const BatchDetailsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Failed</p>
@@ -267,7 +267,7 @@ const BatchDetailsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Progress</p>
@@ -278,7 +278,7 @@ const BatchDetailsPage = () => {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Processing Status</span>
           <span className="text-sm text-gray-500 capitalize">{batch.status}</span>
@@ -292,13 +292,13 @@ const BatchDetailsPage = () => {
       </div>
 
       {/* PDF Records */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">PDF Files</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Filename
@@ -317,9 +317,9 @@ const BatchDetailsPage = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
               {pdfRecords.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-50 dark:bg-gray-900">
+                <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {record.filename}
                   </td>
@@ -358,8 +358,8 @@ const BatchDetailsPage = () => {
 
       {/* Processing Logs */}
       {logs.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Processing Logs</h3>
           </div>
           <div className="px-6 py-4 max-h-96 overflow-y-auto">

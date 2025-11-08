@@ -148,7 +148,7 @@ const UploadPage = () => {
       </div>
 
       {/* Settings Card */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
         <div className="flex items-center mb-4">
           <Settings className="h-5 w-5 text-blue-600 mr-2" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Batch Settings</h3>
@@ -157,7 +157,7 @@ const UploadPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Batch Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Batch Name *
             </label>
             <input
@@ -165,19 +165,19 @@ const UploadPage = () => {
               value={batchName}
               onChange={(e) => setBatchName(e.target.value)}
               placeholder="e.g., Vodafone Invoices - January 2025"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
           </div>
 
           {/* Template Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Extraction Template
             </label>
             <select
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
               <option key="auto-detect" value="">Auto-detect (AI)</option>
               {templates.map(template => (
@@ -197,7 +197,7 @@ const UploadPage = () => {
               type="checkbox"
               checked={useAI}
               onChange={(e) => setUseAI(e.target.checked)}
-              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-400"
             />
             <span className="ml-3 flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
               <Sparkles className="h-4 w-4 mr-1 text-purple-600" />
@@ -211,13 +211,13 @@ const UploadPage = () => {
       </div>
 
       {/* Upload Area */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
             isDragActive
               ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+              : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
           }`}
         >
           <input {...getInputProps()} />
@@ -251,11 +251,11 @@ const UploadPage = () => {
               </button>
             </div>
 
-            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+            <div className="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
               {files.map((file, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                  className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 last:border-b-0"
                 >
                   <div className="flex items-center flex-1 min-w-0">
                     <FileText className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />

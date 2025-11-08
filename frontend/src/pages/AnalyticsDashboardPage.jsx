@@ -58,7 +58,7 @@ export default function AnalyticsDashboardPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Analytics Dashboard
           </h1>
-          <p className="text-gray-600 mt-2">Comprehensive invoice analytics and insights</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">Comprehensive invoice analytics and insights</p>
         </div>
 
         {/* Summary Cards */}
@@ -90,7 +90,7 @@ export default function AnalyticsDashboardPage() {
         </div>
 
         {/* Monthly Trends */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6 mb-8">
           <h2 className="text-xl font-bold mb-4">Monthly Trends (Last 12 Months)</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -104,7 +104,7 @@ export default function AnalyticsDashboardPage() {
               </thead>
               <tbody>
                 {trends.map((trend, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50 dark:bg-gray-900">
+                  <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
                     <td className="py-3 px-4">{trend.month}</td>
                     <td className="text-right py-3 px-4">{trend.invoice_count}</td>
                     <td className="text-right py-3 px-4">₹{parseFloat(trend.total_amount || 0).toLocaleString()}</td>
@@ -119,7 +119,7 @@ export default function AnalyticsDashboardPage() {
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top Spending Circuits */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <h2 className="text-xl font-bold mb-4">Top Spending Circuits</h2>
             <div className="space-y-3">
               {topSpending.map((circuit, index) => (
@@ -139,14 +139,14 @@ export default function AnalyticsDashboardPage() {
           </div>
 
           {/* Payment Due */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center">
               <Calendar className="w-5 h-5 mr-2 text-orange-500" />
               Payment Due (Next 7 Days)
             </h2>
             <div className="space-y-3">
               {paymentDue.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No payments due in the next 7 days</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No payments due in the next 7 days</p>
               ) : (
                 paymentDue.map((payment, index) => (
                   <div key={index} className="p-3 border border-orange-200 bg-orange-50 rounded-lg">
@@ -172,29 +172,29 @@ export default function AnalyticsDashboardPage() {
         </div>
 
         {/* Vendor Comparison */}
-        <div className="bg-white rounded-lg shadow-md p-6 mt-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6 mt-8">
           <h2 className="text-xl font-bold mb-4">Vendor Comparison</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vendorComparison.map((vendor, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+              <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md dark:shadow-gray-900/50 transition-shadow">
                 <h3 className="font-bold text-lg mb-2">{vendor.vendor_name}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Circuits:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Circuits:</span>
                     <span className="font-medium">{vendor.circuit_count}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Invoices:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Invoices:</span>
                     <span className="font-medium">{vendor.invoice_count}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Total Amount:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Total Amount:</span>
                     <span className="font-medium text-green-600">
                       ₹{parseFloat(vendor.total_amount || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Avg Invoice:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Avg Invoice:</span>
                     <span className="font-medium">
                       ₹{parseFloat(vendor.avg_invoice_amount || 0).toLocaleString()}
                     </span>
@@ -219,10 +219,10 @@ function StatCard({ icon, title, value, color }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm">{title}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">{title}</p>
           <p className="text-2xl font-bold mt-2">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>

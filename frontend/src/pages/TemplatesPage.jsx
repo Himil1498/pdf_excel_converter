@@ -139,8 +139,8 @@ const TemplatesPage = () => {
       </div>
 
       {/* Templates Section */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Extraction Templates</h3>
           <button
             onClick={() => {
@@ -163,7 +163,7 @@ const TemplatesPage = () => {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md dark:shadow-gray-900/50 transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -210,8 +210,8 @@ const TemplatesPage = () => {
       </div>
 
       {/* Custom Fields Section */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Custom Fields</h3>
           <button
             onClick={() => {
@@ -230,8 +230,8 @@ const TemplatesPage = () => {
           {customFields.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No custom fields defined</p>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Field Name
@@ -250,9 +250,9 @@ const TemplatesPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
                 {customFields.map((field) => (
-                  <tr key={field.id} className="hover:bg-gray-50 dark:bg-gray-900">
+                  <tr key={field.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {field.field_name}
                     </td>

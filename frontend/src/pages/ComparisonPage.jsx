@@ -112,7 +112,7 @@ export default function ComparisonPage() {
       </div>
 
       {/* Search Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Search Invoice</h3>
         <div className="flex gap-3">
           <input
@@ -121,12 +121,12 @@ export default function ComparisonPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Search by circuit ID, bill number, or customer name..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
           />
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+            className= dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-primary-400 dark:focus:border-primary-400"flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
           >
             <Search className="w-5 h-5 mr-2" />
             Search
@@ -135,12 +135,12 @@ export default function ComparisonPage() {
 
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className="mt-4 border border-gray-200 rounded-lg max-h-60 overflow-y-auto">
+          <div className="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg max-h-60 overflow-y-auto">
             {searchResults.map((invoice) => (
               <button
                 key={invoice.id}
                 onClick={() => handleSelectInvoice(invoice)}
-                className={`w-full text-left px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                className={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                   selectedInvoice?.id === invoice.id ? 'bg-primary-50' : ''
                 }`}
               >
@@ -168,14 +168,14 @@ export default function ComparisonPage() {
       {selectedInvoice && comparisonData && (
         <div className="space-y-6">
           {/* Current vs Previous */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Month-over-Month Comparison
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Current Invoice */}
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-2">Current Invoice</p>
                 <h4 className="text-xl font-bold text-gray-900 mb-4">
                   {selectedInvoice.bill_number}
@@ -183,19 +183,19 @@ export default function ComparisonPage() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Date:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Date:</span>
                     <span className="font-medium">{selectedInvoice.bill_date}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Amount:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Amount:</span>
                     <span className="font-medium">₹{selectedInvoice.total_amount?.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Circuit:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Circuit:</span>
                     <span className="font-medium">{selectedInvoice.circuit_id || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Rental:</span>
+                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Rental:</span>
                     <span className="font-medium">₹{selectedInvoice.monthly_rental?.toLocaleString()}</span>
                   </div>
                 </div>
@@ -203,7 +203,7 @@ export default function ComparisonPage() {
 
               {/* Previous Invoice */}
               {comparisonData.previous_invoice ? (
-                <div className="border border-gray-200 rounded-lg p-4">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                   <p className="text-sm text-gray-600 mb-2">Previous Invoice</p>
                   <h4 className="text-xl font-bold text-gray-900 mb-4">
                     {comparisonData.previous_invoice.bill_number}
@@ -211,21 +211,21 @@ export default function ComparisonPage() {
 
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Date:</span>
+                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Date:</span>
                       <span className="font-medium">{comparisonData.previous_invoice.bill_date}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Amount:</span>
+                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Amount:</span>
                       <span className="font-medium">
                         ₹{comparisonData.previous_invoice.total_amount?.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Circuit:</span>
+                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Circuit:</span>
                       <span className="font-medium">{comparisonData.previous_invoice.circuit_id || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">Rental:</span>
+                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Rental:</span>
                       <span className="font-medium">
                         ₹{comparisonData.previous_invoice.monthly_rental?.toLocaleString()}
                       </span>
@@ -233,7 +233,7 @@ export default function ComparisonPage() {
                   </div>
                 </div>
               ) : (
-                <div className="border border-gray-200 rounded-lg p-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
                   No previous invoice found for comparison
                 </div>
               )}
@@ -242,7 +242,7 @@ export default function ComparisonPage() {
             {/* Changes Summary */}
             {comparisonData.previous_invoice && (
               <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                   <p className="text-sm text-gray-600 mb-2">Total Amount Change</p>
                   {renderChangeIndicator(
                     calculateChange(
@@ -252,7 +252,7 @@ export default function ComparisonPage() {
                   )}
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                   <p className="text-sm text-gray-600 mb-2">Monthly Rental Change</p>
                   {renderChangeIndicator(
                     calculateChange(
@@ -262,7 +262,7 @@ export default function ComparisonPage() {
                   )}
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                   <p className="text-sm text-gray-600 mb-2">Tax Change</p>
                   {renderChangeIndicator(
                     calculateChange(
@@ -279,14 +279,14 @@ export default function ComparisonPage() {
 
           {/* Circuit History */}
           {circuitHistory.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Circuit History ({selectedInvoice.circuit_id})
               </h3>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Date
@@ -305,13 +305,13 @@ export default function ComparisonPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
                     {circuitHistory.map((item, index) => {
                       const previousItem = circuitHistory[index + 1];
                       const change = previousItem ? calculateChange(item.total_amount, previousItem.total_amount) : null;
 
                       return (
-                        <tr key={item.id} className="hover:bg-gray-50 dark:bg-gray-900">
+                        <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {item.bill_date}
                           </td>
@@ -340,7 +340,7 @@ export default function ComparisonPage() {
 
       {/* Significant Changes */}
       {significantChanges.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Significant Price Changes (&gt;15%)
           </h3>
@@ -349,7 +349,7 @@ export default function ComparisonPage() {
             {significantChanges.map((change, index) => (
               <div
                 key={index}
-                className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-primary-300 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">

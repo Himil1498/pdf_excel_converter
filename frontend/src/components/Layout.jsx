@@ -8,7 +8,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
@@ -26,7 +26,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -39,7 +39,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -52,7 +52,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -65,7 +65,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -78,7 +78,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -91,7 +91,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -104,7 +104,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -129,7 +129,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -142,7 +142,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -155,7 +155,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -168,7 +168,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -181,7 +181,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -194,7 +194,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -207,7 +207,7 @@ const Layout = () => {
                   `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                       ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:bg-gray-700'
                   }`
                 }
               >
@@ -225,9 +225,9 @@ const Layout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-gray-500 text-sm">
+          <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
             PDF to Excel Converter - Bulk process 500-1000 PDFs with AI-powered extraction
           </p>
         </div>
