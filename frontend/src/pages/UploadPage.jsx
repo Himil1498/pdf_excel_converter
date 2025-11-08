@@ -141,8 +141,8 @@ const UploadPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Upload PDFs</h2>
-        <p className="mt-2 text-gray-600">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Upload PDFs</h2>
+        <p className="mt-2 text-gray-600 dark:text-gray-300">
           Upload up to 1000 PDF files for batch conversion to Excel
         </p>
       </div>
@@ -150,8 +150,8 @@ const UploadPage = () => {
       {/* Settings Card */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center mb-4">
-          <Settings className="h-5 w-5 text-gray-700 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">Batch Settings</h3>
+          <Settings className="h-5 w-5 text-blue-600 mr-2" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Batch Settings</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -179,7 +179,7 @@ const UploadPage = () => {
               onChange={(e) => setTemplateId(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
-              <option value="">Auto-detect (AI)</option>
+              <option key="auto-detect" value="">Auto-detect (AI)</option>
               {templates.map(template => (
                 <option key={template.id} value={template.id}>
                   {template.template_name}
@@ -199,12 +199,12 @@ const UploadPage = () => {
               onChange={(e) => setUseAI(e.target.checked)}
               className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
             />
-            <span className="ml-3 flex items-center text-sm font-medium text-gray-700">
-              <Sparkles className="h-4 w-4 mr-1 text-primary-600" />
+            <span className="ml-3 flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
+              <Sparkles className="h-4 w-4 mr-1 text-purple-600" />
               Use AI-powered extraction for better accuracy
             </span>
           </label>
-          <p className="mt-2 ml-8 text-sm text-gray-500">
+          <p className="mt-2 ml-8 text-sm text-gray-500 dark:text-gray-400">
             AI extraction works with multiple vendor formats and provides higher accuracy
           </p>
         </div>
@@ -221,7 +221,7 @@ const UploadPage = () => {
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <Upload className="mx-auto h-12 w-12 text-primary-500 mb-4" />
           {isDragActive ? (
             <p className="text-lg text-primary-600 font-medium">Drop the files here...</p>
           ) : (
@@ -229,7 +229,7 @@ const UploadPage = () => {
               <p className="text-lg text-gray-700 font-medium mb-2">
                 Drag & drop PDF files here, or click to select
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Maximum 1000 files per batch | Up to 10MB per file
               </p>
             </>
@@ -240,7 +240,7 @@ const UploadPage = () => {
         {files.length > 0 && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-700">
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Selected Files ({files.length})
               </h4>
               <button
@@ -258,12 +258,12 @@ const UploadPage = () => {
                   className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                 >
                   <div className="flex items-center flex-1 min-w-0">
-                    <FileText className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                    <FileText className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-700 truncate">
                         {file.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {(file.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
@@ -272,7 +272,7 @@ const UploadPage = () => {
                     onClick={() => removeFile(index)}
                     className="ml-4 p-1 hover:bg-red-100 rounded-full transition-colors"
                   >
-                    <X className="h-5 w-5 text-red-600" />
+                    <X className="h-5 w-5 text-red-500" />
                   </button>
                 </div>
               ))}
@@ -284,7 +284,7 @@ const UploadPage = () => {
         {uploading && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Uploading...</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Uploading...</span>
               <span className="text-sm font-medium text-primary-600">{uploadProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -312,7 +312,7 @@ const UploadPage = () => {
               </>
             ) : (
               <>
-                <Upload className="h-5 w-5 mr-2" />
+                <Upload className="h-5 w-5 mr-2 text-white" />
                 Upload and Process {files.length} File(s)
               </>
             )}

@@ -19,3 +19,33 @@ code {
 * {
   box-sizing: border-box;
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Optional: Show scrollbar on hover for better UX */
+.show-scrollbar-on-hover:hover::-webkit-scrollbar {
+  width: 8px;
+}
+
+.show-scrollbar-on-hover:hover::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.show-scrollbar-on-hover:hover::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.show-scrollbar-on-hover:hover::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

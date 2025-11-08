@@ -124,14 +124,14 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             {template ? 'Edit Template' : 'Create New Template'}
           </h3>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -178,7 +178,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                 onChange={handleInputChange}
                 className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm font-medium text-gray-700">
+              <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200">
                 Set as default template for this vendor
               </span>
             </label>
@@ -187,7 +187,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
           {/* Field Mappings */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-semibold text-gray-900">Field Extraction Patterns</h4>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Field Extraction Patterns</h4>
               <button
                 type="button"
                 onClick={handleAddCustomField}
@@ -238,7 +238,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
                         onChange={() => handleRequiredToggle(index)}
                         className="w-4 h-4 text-primary-600 border-gray-300 rounded"
                       />
-                      <span className="ml-1 text-xs text-gray-600">Required</span>
+                      <span className="ml-1 text-xs text-gray-600 dark:text-gray-300">Required</span>
                     </label>
 
                     {index >= 9 && (
@@ -268,7 +268,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template }) => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}

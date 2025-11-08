@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, Download, Trash2, RefreshCw, Clock, CheckCircle, XCircle, Loader, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { uploadAPI } from '../services/api';
 import { format } from 'date-fns';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const BatchesPage = () => {
   const navigate = useNavigate();
@@ -15,12 +16,14 @@ const BatchesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, limit: 20, offset: 0, hasMore: false });
   const itemsPerPage = 20;
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
-  useEffect(() => {
-    loadBatches();
-  }, [currentPage, searchTerm, statusFilter]);
-
-  const loadBatches = async () => {
+  const loadBatches = useCallback(async () => {
     try {
       setLoading(true);
       const offset = (currentPage - 1) * itemsPerPage;
@@ -30,16 +33,29 @@ const BatchesPage = () => {
         search: searchTerm,
         status: statusFilter
       });
-      if (response.success) {
-        setBatches(response.data);
-        setPagination(response.pagination);
+
+      if (response && response.success) {
+        setBatches(Array.isArray(response.data) ? response.data : []);
+        setPagination(response.pagination || { total: 0, limit: 20, offset: 0, hasMore: false });
+      } else if (response && response.data) {
+        // Handle case where response doesn't have success flag
+        setBatches(Array.isArray(response.data) ? response.data : []);
+      } else {
+        setBatches([]);
       }
     } catch (error) {
+      console.error('Error loading batches:', error);
       toast.error('Failed to load batches');
+      setBatches([]);
+      setPagination({ total: 0, limit: 20, offset: 0, hasMore: false });
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, statusFilter, itemsPerPage]);
+
+  useEffect(() => {
+    loadBatches();
+  }, [loadBatches]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -48,31 +64,38 @@ const BatchesPage = () => {
     toast.success('Batches refreshed');
   };
 
-  const handleDelete = async (batchId, batchName) => {
-    if (!confirm(`Are you sure you want to delete "${batchName}"?`)) {
-      return;
-    }
-
-    try {
-      await uploadAPI.deleteBatch(batchId);
-      toast.success('Batch deleted successfully');
-      loadBatches();
-    } catch (error) {
-      toast.error('Failed to delete batch');
-    }
+  const handleDelete = (batchId, batchName) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Batch',
+      message: `Are you sure you want to delete "${batchName}"? This will delete all associated files and data. This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await uploadAPI.deleteBatch(batchId);
+          toast.success('Batch deleted successfully');
+          loadBatches();
+        } catch (error) {
+          toast.error('Failed to delete batch');
+        }
+      }
+    });
   };
 
   const handleDownload = (batchId) => {
-    uploadAPI.downloadExcel(batchId);
-    toast.success('Download started');
+    try {
+      uploadAPI.downloadExcel(batchId);
+      toast.success('Download started');
+    } catch (error) {
+      toast.error('Download failed');
+    }
   };
 
   const getStatusBadge = (status) => {
     const badges = {
-      pending: { icon: Clock, text: 'Pending', className: 'bg-yellow-100 text-yellow-800' },
-      processing: { icon: Loader, text: 'Processing', className: 'bg-blue-100 text-blue-800' },
-      completed: { icon: CheckCircle, text: 'Completed', className: 'bg-green-100 text-green-800' },
-      failed: { icon: XCircle, text: 'Failed', className: 'bg-red-100 text-red-800' },
+      pending: { icon: Clock, text: 'Pending', className: 'bg-warning-100 text-warning-800' },
+      processing: { icon: Loader, text: 'Processing', className: 'bg-info-100 text-info-800' },
+      completed: { icon: CheckCircle, text: 'Completed', className: 'bg-success-100 text-success-800' },
+      failed: { icon: XCircle, text: 'Failed', className: 'bg-error-100 text-error-800' },
     };
 
     const badge = badges[status] || badges.pending;
@@ -87,8 +110,22 @@ const BatchesPage = () => {
   };
 
   const getProgressPercentage = (batch) => {
-    if (batch.total_files === 0) return 0;
-    return Math.round(((batch.processed_files + batch.failed_files) / batch.total_files) * 100);
+    if (!batch || batch.total_files === 0) return 0;
+    const total = parseInt(batch.total_files) || 0;
+    const processed = parseInt(batch.processed_files) || 0;
+    const failed = parseInt(batch.failed_files) || 0;
+    return Math.round(((processed + failed) / total) * 100);
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return format(date, 'MMM dd, yyyy HH:mm');
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   if (loading) {
@@ -99,16 +136,16 @@ const BatchesPage = () => {
     );
   }
 
-  const totalPages = Math.ceil(pagination.total / itemsPerPage);
+  const totalPages = Math.ceil((pagination?.total || 0) / itemsPerPage);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Processing Batches</h2>
-          <p className="mt-2 text-gray-600">
-            View and manage your PDF processing batches ({pagination.total} total)
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Processing Batches</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
+            View and manage your PDF processing batches ({pagination?.total || 0} total)
           </p>
         </div>
         <button
@@ -149,18 +186,18 @@ const BatchesPage = () => {
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
+              <option key="all" value="">All Status</option>
+              <option key="pending" value="pending">Pending</option>
+              <option key="processing" value="processing">Processing</option>
+              <option key="completed" value="completed">Completed</option>
+              <option key="failed" value="failed">Failed</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Batches List */}
-      {batches.length === 0 ? (
+      {!batches || batches.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-12 text-center">
           <p className="text-gray-500 text-lg">No batches found</p>
           <p className="text-gray-400 text-sm mt-2">
@@ -176,8 +213,8 @@ const BatchesPage = () => {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Batch Name
@@ -199,73 +236,81 @@ const BatchesPage = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {batches.map((batch) => (
-                <tr key={batch.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {batch.batch_name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      ID: {batch.id}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(batch.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      Total: {batch.total_files}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      ✓ {batch.processed_files} | ✗ {batch.failed_files}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
-                        <div
-                          className="bg-primary-600 h-2 rounded-full transition-all"
-                          style={{ width: `${getProgressPercentage(batch)}%` }}
-                        />
+            <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700">
+              {batches.map((batch) => {
+                if (!batch || !batch.id) return null;
+
+                return (
+                  <tr key={batch.id} className="hover:bg-gray-50 dark:bg-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {batch.batch_name || 'Unnamed Batch'}
                       </div>
-                      <span className="text-sm text-gray-700">
-                        {getProgressPercentage(batch)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(batch.created_at), 'MMM dd, yyyy HH:mm')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => navigate(`/batches/${batch.id}`)}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="h-5 w-5" />
-                      </button>
-                      {batch.excel_file_path && (
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        ID: {batch.id}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(batch.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        Total: {batch.total_files || 0}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        ✓ {batch.processed_files || 0} | ✗ {batch.failed_files || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                          <div
+                            className="bg-primary-600 h-2 rounded-full transition-all"
+                            style={{ width: `${getProgressPercentage(batch)}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-700 dark:text-gray-200">
+                          {getProgressPercentage(batch)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(batch.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => handleDownload(batch.id)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Download Excel"
+                          onClick={() => navigate(`/batches/${batch.id}`)}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                    title="View Details"
+                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          title="View Details"
                         >
-                          <Download className="h-5 w-5" />
+                          <Eye className="h-5 w-5" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(batch.id, batch.batch_name)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Batch"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {batch.excel_file_path && (
+                          <button
+                            onClick={() => handleDownload(batch.id)}
+                            className="p-2 text-success-600 hover:bg-success-50 rounded-lg transition-colors"
+                            title="Download Excel"
+                          >
+                            <Download className="h-5 w-5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(batch.id, batch.batch_name)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                    title="Delete Batch"
+                          className="p-2 text-error-600 hover:bg-error-50 rounded-lg transition-colors"
+                          title="Delete Batch"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -274,8 +319,8 @@ const BatchesPage = () => {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, pagination.total)} of {pagination.total} batches
+          <div className="text-sm text-gray-700 dark:text-gray-200">
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, pagination?.total || 0)} of {pagination?.total || 0} batches
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -298,6 +343,13 @@ const BatchesPage = () => {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+      />
     </div>
   );
 };

@@ -74,14 +74,14 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-          <h3 className="text-xl font-semibold text-gray-900">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             {field ? 'Edit Custom Field' : 'Create New Custom Field'}
           </h3>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -101,7 +101,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Internal name for this field
               </p>
             </div>
@@ -117,12 +117,12 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               >
-                <option value="text">Text</option>
-                <option value="number">Number</option>
-                <option value="date">Date</option>
-                <option value="currency">Currency</option>
+                <option key="text" value="text">Text</option>
+                <option key="number" value="number">Number</option>
+                <option key="date" value="date">Date</option>
+                <option key="currency" value="currency">Currency</option>
               </select>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Data type for validation
               </p>
             </div>
@@ -141,7 +141,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               This will be the column header in the exported Excel file
             </p>
           </div>
@@ -158,7 +158,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
               placeholder="e.g., Customer\\s*Ref[:\.]\\s*([A-Z0-9]+)"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Regex pattern to extract this field from PDFs. Leave empty to rely on AI extraction.
             </p>
           </div>
@@ -176,7 +176,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                 min="0"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Order in which field appears (0 = first)
               </p>
             </div>
@@ -190,11 +190,11 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
                   onChange={handleInputChange}
                   className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700">
+                <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                   Active
                 </span>
               </label>
-              <p className="ml-2 text-xs text-gray-500">
+              <p className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                 (Only active fields are used in extraction)
               </p>
             </div>
@@ -212,7 +212,7 @@ const CustomFieldModal = ({ isOpen, onClose, onSave, field }) => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}

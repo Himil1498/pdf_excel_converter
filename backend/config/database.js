@@ -31,11 +31,15 @@ const testConnection = async () => {
   }
 };
 
-// Execute query with error handling
+// Execute query with error handling (returns [rows, fields] like pool.query)
+// Using pool.query instead of pool.execute for better parameter handling
 const query = async (sql, params = []) => {
   try {
-    const [results] = await pool.execute(sql, params);
-    return results;
+    // Ensure params is always an array
+    const safeParams = Array.isArray(params) ? params : [];
+
+    // Use pool.query which handles parameters more flexibly than execute
+    return await pool.query(sql, safeParams);
   } catch (error) {
     console.error('Database query error:', error.message);
     throw error;

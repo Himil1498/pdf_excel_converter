@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import { templateAPI } from '../services/api';
 import TemplateModal from '../components/TemplateModal';
 import CustomFieldModal from '../components/CustomFieldModal';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const TemplatesPage = () => {
   const [templates, setTemplates] = useState([]);
@@ -13,6 +14,12 @@ const TemplatesPage = () => {
   const [showFieldModal, setShowFieldModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [editingField, setEditingField] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
   useEffect(() => {
     loadData();
@@ -69,28 +76,48 @@ const TemplatesPage = () => {
     }
   };
 
-  const handleDeleteTemplate = async (templateId, templateName) => {
-    if (!confirm(`Delete template "${templateName}"?`)) return;
-
-    try {
-      await templateAPI.deleteTemplate(templateId);
-      toast.success('Template deleted');
-      loadData();
-    } catch (error) {
-      toast.error('Failed to delete template');
+  const handleDeleteTemplate = (templateId, templateName) => {
+    if (!templateId) {
+      toast.error('Invalid template ID');
+      return;
     }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Template',
+      message: `Are you sure you want to delete template "${templateName}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await templateAPI.deleteTemplate(templateId);
+          toast.success('Template deleted');
+          loadData();
+        } catch (error) {
+          toast.error('Failed to delete template');
+        }
+      }
+    });
   };
 
-  const handleDeleteField = async (fieldId, fieldName) => {
-    if (!confirm(`Delete field "${fieldName}"?`)) return;
-
-    try {
-      await templateAPI.deleteCustomField(fieldId);
-      toast.success('Field deleted');
-      loadData();
-    } catch (error) {
-      toast.error('Failed to delete field');
+  const handleDeleteField = (fieldId, fieldName) => {
+    if (!fieldId) {
+      toast.error('Invalid field ID');
+      return;
     }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Custom Field',
+      message: `Are you sure you want to delete field "${fieldName}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await templateAPI.deleteCustomField(fieldId);
+          toast.success('Field deleted');
+          loadData();
+        } catch (error) {
+          toast.error('Failed to delete field');
+        }
+      }
+    });
   };
 
   if (loading) {
@@ -105,8 +132,8 @@ const TemplatesPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Templates & Fields</h2>
-        <p className="mt-2 text-gray-600">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Templates & Fields</h2>
+        <p className="mt-2 text-gray-600 dark:text-gray-300">
           Manage extraction templates and custom field configurations
         </p>
       </div>
@@ -114,7 +141,7 @@ const TemplatesPage = () => {
       {/* Templates Section */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Extraction Templates</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Extraction Templates</h3>
           <button
             onClick={() => {
               setEditingTemplate(null);
@@ -123,7 +150,7 @@ const TemplatesPage = () => {
             className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg
                      hover:bg-primary-700 transition-colors"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-5 w-5 mr-2 text-white" />
             New Template
           </button>
         </div>
@@ -140,7 +167,7 @@ const TemplatesPage = () => {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {template.template_name}
                         {template.is_default && (
                           <span className="ml-2 text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded-full">
@@ -160,19 +187,19 @@ const TemplatesPage = () => {
                           setEditingTemplate(template);
                           setShowTemplateModal(true);
                         }}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       >
-                        <Edit className="h-5 w-5" />
+                        <Edit className="h-5 w-5 text-blue-600" />
                       </button>
                       <button
                         onClick={() => handleDeleteTemplate(template.id, template.template_name)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-error-600 hover:bg-error-50 rounded-lg transition-colors"
                       >
-                        <Trash2 className="h-5 w-5" />
+                        <Trash2 className="h-5 w-5 text-red-600" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Created: {new Date(template.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -185,7 +212,7 @@ const TemplatesPage = () => {
       {/* Custom Fields Section */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Custom Fields</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Custom Fields</h3>
           <button
             onClick={() => {
               setEditingField(null);
@@ -194,7 +221,7 @@ const TemplatesPage = () => {
             className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg
                      hover:bg-primary-700 transition-colors"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-5 w-5 mr-2 text-white" />
             New Field
           </button>
         </div>
@@ -203,8 +230,8 @@ const TemplatesPage = () => {
           {customFields.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No custom fields defined</p>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Field Name
@@ -223,23 +250,23 @@ const TemplatesPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700">
                 {customFields.map((field) => (
-                  <tr key={field.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr key={field.id} className="hover:bg-gray-50 dark:bg-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {field.field_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                       {field.field_type}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {field.excel_column_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${
                           field.is_active
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-success-100 text-success-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
@@ -253,15 +280,15 @@ const TemplatesPage = () => {
                             setEditingField(field);
                             setShowFieldModal(true);
                           }}
-                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         >
-                          <Edit className="h-5 w-5" />
+                          <Edit className="h-5 w-5 text-blue-600" />
                         </button>
                         <button
                           onClick={() => handleDeleteField(field.id, field.field_name)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-error-600 hover:bg-error-50 rounded-lg transition-colors"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-5 w-5 text-red-600" />
                         </button>
                       </div>
                     </td>
@@ -274,9 +301,9 @@ const TemplatesPage = () => {
       </div>
 
       {/* Template Configuration Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h4 className="text-sm font-semibold text-blue-900 mb-2">About Templates</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="bg-info-50 border border-info-200 rounded-lg p-6">
+        <h4 className="text-sm font-semibold text-info-900 mb-2">About Templates</h4>
+        <ul className="text-sm text-info-800 space-y-1">
           <li>• Templates define extraction patterns for different PDF formats</li>
           <li>• Set a default template for your most common vendor</li>
           <li>• Use regex patterns to extract specific fields from PDFs</li>
@@ -303,6 +330,14 @@ const TemplatesPage = () => {
         }}
         onSave={handleSaveField}
         field={editingField}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
       />
     </div>
   );

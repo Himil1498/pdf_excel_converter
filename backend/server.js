@@ -10,8 +10,20 @@ require('dotenv').config();
 const db = require('./config/database');
 const routes = require('./routes');
 
+// ===== NEW FEATURE ROUTES =====
+const validationRoutes = require('./routes/validation');
+const analyticsRoutes = require('./routes/analytics');
+const searchRoutes = require('./routes/search');
+const comparisonRoutes = require('./routes/comparison');
+const alertsRoutes = require('./routes/alerts');
+const exportRoutes = require('./routes/export');
+const correctionsRoutes = require('./routes/corrections');
+const schedulerRoutes = require('./routes/scheduler');
+const cloudRoutes = require('./routes/cloud');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // ===== MIDDLEWARE =====
 
@@ -48,13 +60,20 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('combined'));
 }
 
-// Rate limiting
+// Rate limiting - more lenient in development
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000, // 1 minute (reduced from 15)
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || (isDevelopment ? 1000 : 100), // Higher limit in dev
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
+  },
+  skip: (req) => {
+    // Skip rate limiting in development for localhost
+    if (isDevelopment && (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1')) {
+      return true;
+    }
+    return false;
   }
 });
 
@@ -65,7 +84,19 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ===== ROUTES =====
 
+// Existing routes
 app.use('/api', routes);
+
+// ===== NEW FEATURE ROUTES =====
+app.use('/api/validation', validationRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/compare', comparisonRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/export', exportRoutes);
+app.use('/api/corrections', correctionsRoutes);
+app.use('/api/scheduler', schedulerRoutes);
+app.use('/api/cloud', cloudRoutes);
 
 // Root route
 app.get('/', (req, res) => {

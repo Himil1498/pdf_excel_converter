@@ -1,0 +1,234 @@
+import { useState, useEffect } from 'react';
+import { analyticsAPI } from '../services/api';
+import { TrendingUp, TrendingDown, DollarSign, FileText, AlertCircle, Calendar } from 'lucide-react';
+
+export default function AnalyticsDashboardPage() {
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [trends, setTrends] = useState([]);
+  const [topSpending, setTopSpending] = useState([]);
+  const [paymentDue, setPaymentDue] = useState([]);
+  const [vendorComparison, setVendorComparison] = useState([]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const [dashboard, trendsData, topSpend, payments, vendors] = await Promise.all([
+        analyticsAPI.getDashboard(),
+        analyticsAPI.getMonthlyTrends(12),
+        analyticsAPI.getTopSpending(10),
+        analyticsAPI.getPaymentDue(7),
+        analyticsAPI.getVendorComparison(),
+      ]);
+
+      setDashboardData(dashboard);
+      setTrends(trendsData);
+      setTopSpending(topSpend);
+      setPaymentDue(payments);
+      setVendorComparison(vendors);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const summary = dashboardData?.summary || {};
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Analytics Dashboard
+          </h1>
+          <p className="text-gray-600 mt-2">Comprehensive invoice analytics and insights</p>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            icon={<FileText className="w-6 h-6" />}
+            title="Total Invoices"
+            value={summary.total_invoices || 0}
+            color="blue"
+          />
+          <StatCard
+            icon={<DollarSign className="w-6 h-6" />}
+            title="Total Amount"
+            value={`₹${(summary.total_amount || 0).toLocaleString()}`}
+            color="green"
+          />
+          <StatCard
+            icon={<TrendingUp className="w-6 h-6" />}
+            title="Avg Invoice"
+            value={`₹${(summary.avg_invoice_amount || 0).toLocaleString()}`}
+            color="purple"
+          />
+          <StatCard
+            icon={<AlertCircle className="text-amber-600 w-6 h-6" />}
+            title="Unique Circuits"
+            value={summary.unique_circuits || 0}
+            color="orange"
+          />
+        </div>
+
+        {/* Monthly Trends */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4">Monthly Trends (Last 12 Months)</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-4">Month</th>
+                  <th className="text-right py-2 px-4">Invoices</th>
+                  <th className="text-right py-2 px-4">Total Amount</th>
+                  <th className="text-right py-2 px-4">Active Circuits</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trends.map((trend, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-50 dark:bg-gray-900">
+                    <td className="py-3 px-4">{trend.month}</td>
+                    <td className="text-right py-3 px-4">{trend.invoice_count}</td>
+                    <td className="text-right py-3 px-4">₹{parseFloat(trend.total_amount || 0).toLocaleString()}</td>
+                    <td className="text-right py-3 px-4">{trend.active_circuits}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Top Spending Circuits */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4">Top Spending Circuits</h2>
+            <div className="space-y-3">
+              {topSpending.map((circuit, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{circuit.circuit_id}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300">{circuit.company_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{circuit.city}, {circuit.state}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-green-600">₹{parseFloat(circuit.total_spent || 0).toLocaleString()}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300">{circuit.invoice_count} invoices</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payment Due */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <Calendar className="w-5 h-5 mr-2 text-orange-500" />
+              Payment Due (Next 7 Days)
+            </h2>
+            <div className="space-y-3">
+              {paymentDue.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No payments due in the next 7 days</p>
+              ) : (
+                paymentDue.map((payment, index) => (
+                  <div key={index} className="p-3 border border-orange-200 bg-orange-50 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-sm">{payment.bill_number}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">{payment.company_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{payment.circuit_id}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-orange-600">₹{parseFloat(payment.total || 0).toLocaleString()}</p>
+                        <p className="text-xs text-orange-700 font-medium">
+                          {payment.days_until_due} days left
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">Due: {new Date(payment.due_date).toLocaleDateString()}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Vendor Comparison */}
+        <div className="bg-white rounded-lg shadow-md p-6 mt-8">
+          <h2 className="text-xl font-bold mb-4">Vendor Comparison</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {vendorComparison.map((vendor, index) => (
+              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                <h3 className="font-bold text-lg mb-2">{vendor.vendor_name}</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Circuits:</span>
+                    <span className="font-medium">{vendor.circuit_count}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Invoices:</span>
+                    <span className="font-medium">{vendor.invoice_count}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Total Amount:</span>
+                    <span className="font-medium text-green-600">
+                      ₹{parseFloat(vendor.total_amount || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-300">Avg Invoice:</span>
+                    <span className="font-medium">
+                      ₹{parseFloat(vendor.avg_invoice_amount || 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Stat Card Component
+function StatCard({ icon, title, value, color }) {
+  const colorClasses = {
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-green-100 text-green-600',
+    purple: 'bg-purple-100 text-purple-600',
+    orange: 'bg-orange-100 text-orange-600',
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-600 text-sm">{title}</p>
+          <p className="text-2xl font-bold mt-2">{value}</p>
+        </div>
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}

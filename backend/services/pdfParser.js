@@ -74,49 +74,130 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
     const patterns = {
       // Invoice details
       invoiceNumber: /Invoice\s*(?:No|Number)?[:.\s]*([A-Z0-9]+)/i,
+      invoiceRefNo: /Invoice\s*Ref\s*No[:.\s]*([a-zA-Z0-9]+)/i,
       billDate: /(?:Bill|Invoice)\s*(?:Cycle\s*)?Date[:.\s]*(\d{2}\.?\d{2}\.?\d{2,4})/i,
       dueDate: /Due\s*[Dd]ate[:.\s]*(\d{2}\.?\d{2}\.?\d{2,4})/i,
       relationshipNumber: /Relationship\s*(?:no|number)?[:.\s]*(\d+)/i,
+      invoiceType: /(TAX\s*INVOICE)/i,
 
       // Amounts
       totalPayable: /TOTAL\s*PAYABLE\s*([0-9,]+\.?\d{0,2})/i,
       subTotal: /(?:Sub\s*total|Total\s*taxable\s*charges)\s*([0-9,]+\.?\d{0,2})/i,
-      tax: /Tax\s*([0-9,]+\.?\d{0,2})/i,
+      tax: /\(\+\)\s*Tax\s*([0-9,]+\.?\d{0,2})/i,
+      previousOutstanding: /(?:Your\s*previous\s*outstanding\s*balance|Amount\s*due).*?(?:INR|Rs\.?)[:.\s]*([0-9,]+\.?\d{0,2})/i,
+      amountInWords: /Amount\s*in\s*words[:.\s]*([^\n]+)/i,
+      totalValueOfServices: /Total\s*value\s*of\s*services\s*([0-9,]+\.?\d{0,2})/i,
+      totalTaxableCharges: /Total\s*taxable\s*charges\s*([0-9,]+\.?\d{0,2})/i,
+      miscCharges: /Misc\.\s*credits\s*\/\s*charges\s*([0-9,]+\.?\d{0,2})/i,
 
       // Company details
       companyName: /Company\s*Name\s*[:.]?\s*\.?\s*([^\n]+)/i,
       gstin: /GSTIN(?:\/GSTIN_ISD)?(?:\/UIN)?(?:\s*No)?[:.\s]*([A-Z0-9]{15})/i,
+      contactPerson: /Kind\s*Attn[:.\s]*([^\n]+)/i,
+      contactNumber: /Contact\s*No[:.\s]*([0-9]+)/i,
+      city: /City[:.\s]*([A-Z\s]+)/i,
+      state: /State[:.\s]*([A-Z\s]+)/i,
+      pin: /Pin[:.\s]*(\d{6})/i,
 
       // Service details
       circuitId: /Circuit\s*ID\s*[:.]?\s*([A-Z0-9]+)/i,
       controlNumber: /Control\s*Number\s*[:.]?\s*(\d+)/i,
       bandwidth: /(?:CIR\s*)?Bandwidth\s*[:.]?\s*(\d+)\s*Mbps/i,
+      portBandwidth: /Port\s*Bandwidth\s*[:.]?\s*([^\n]+)/i,
       planName: /Plan\s*Name\s*[:.]?\s*([^\n]+)/i,
+      productFlavor: /Product\s*Flavor\s*[:.]?\s*([^\n]+)/i,
+      billingPeriodicity: /Billing\s*Periodicity\s*[:.]?\s*([^\n]+)/i,
+      vpnTopology: /VPN\s*Topology\s*[:.]?\s*([^\n]+)/i,
+      typeOfSite: /Type\s*of\s*site\s*[:.]?\s*([^\n]+)/i,
+      annualCharges: /Annual\s*Charges\s*Service\s*Rental.*?[:.\s]*([0-9,]+\.?\d{0,2})/i,
+      natureOfService: /Nature\s*of\s*Service[:.\s]*([^\n]+)/i,
+
+      // Service Period
+      servicePeriod: /Charges\s*for\s*the\s*period\s*(\d{2}\.\d{2}\.\d{2})\s*to\s*(\d{2}\.\d{2}\.\d{2})/i,
 
       // Tax details
       cgst: /Central\s*GST\s*@\s*([0-9.]+)%/i,
       sgst: /State\s*GST\s*@\s*([0-9.]+)%/i,
+      igst: /IGST\s*@\s*([0-9.]+)%/i,
+      cgstAmount: /Central\s*GST\s*@\s*[0-9.]+%\s*([0-9,]+\.?\d{0,2})/i,
+      sgstAmount: /State\s*GST\s*@\s*[0-9.]+%\s*([0-9,]+\.?\d{0,2})/i,
+      igstAmount: /IGST\s*@\s*[0-9.]+%\s*([0-9,]+\.?\d{0,2})/i,
+      totalTaxAmount: /Total\s*taxes\s*([0-9,]+\.?\d{0,2})/i,
+      reverseCharge: /No\s*Tax\s*is\s*payable\s*under\s*reverse\s*charge/i,
+
+      // Vendor Information
+      vendorName: /Vodafone\s*Idea/i,
+      vendorPan: /PAN\s*No[:.\s]*([A-Z0-9]{10})/i,
+      vendorGstin: /Vodafone\s*Idea\s*GSTIN[:.\s]*([A-Z0-9]{15})/i,
+      vendorCin: /CIN[:-]([A-Z0-9]+)/i,
+      vendorEmail: /vbsbillingsupport\.in@vodafoneidea\.com/i,
+      vendorPhone: /(\d{12})\s*\(Vi\s*toll\s*free\)/i,
+      vendorChargeablePhone: /(\+91\s*\d{10})\s*\(Chargeable\)/i,
+      vendorBusinessAddress: /Business\s*Office\s*Address[:.\s]*([^\n]+(?:\n[^\n]+)?)/i,
+      vendorRegisteredAddress: /Regd\s*Office\s*Address[:.\s]*([^\n]+(?:\n[^\n]+)?)/i,
+
+      // Place of Supply
+      placeOfSupply: /Place\s*of\s*Supply\s*\(State\)[:.\s]*([^\n]+)/i,
+      stateCode: /State\s*Code[:.\s]*(\d{2})/i,
 
       // Purchase order
       poNumber: /(?:PO\s*Number|Purchase\s*Order)\s*[:.]?\s*([A-Z0-9\s-]+)/i,
+      poDate: /PO\s*Date\s*[:.]?\s*(\d{2}\.\d{2}\.\d{2,4})/i,
 
       // Charges
       recurringCharges: /Recurring\s*charges\s*([0-9,]+\.?\d{0,2})/i,
       oneTimeCharges: /One\s*time\s*charges\s*([0-9,]+\.?\d{0,2})/i,
       usageCharges: /Usage\s*charges\s*([0-9,]+\.?\d{0,2})/i,
+
+      // Bank Details
+      bankName: /Bank\s*Name[:.\s]*(State\s*Bank\s*of\s*India)/i,
+      bankAccountNumber: /Account\s*no[:.\s]*(\d+)/i,
+      ifscCode: /(?:RTGS\/)?IFSC\s*Code[:.\s]*([A-Z0-9]+)/i,
+      swiftCode: /Swift\s*Code[:.\s]*([A-Z0-9]+)/i,
+      micrCode: /MICR\s*Code[:.\s]*([A-Z0-9]+|NA)/i,
+      bankBranchAddress: /Bank\s*branch\s*address[:.\s]*([^\n]+)/i,
+
+      // HSN/SAC
+      hsnCode: /HSN\s*Code[:.\s]*(\d+)/i,
     };
 
     const extracted = {};
 
     for (const [key, pattern] of Object.entries(patterns)) {
       const match = text.match(pattern);
-      extracted[key] = match ? match[1].trim() : null;
+      if (key === 'servicePeriod' && match) {
+        // Special handling for service period (two dates)
+        extracted.servicePeriodFrom = match[1] ? match[1].trim() : null;
+        extracted.servicePeriodTo = match[2] ? match[2].trim() : null;
+      } else if (key === 'reverseCharge') {
+        // Boolean field
+        extracted[key] = match ? false : null; // "No Tax is payable" means false
+      } else if (key === 'vendorEmail' || key === 'vendorPhone' || key === 'vendorChargeablePhone') {
+        // Direct values without capture groups
+        if (match) {
+          extracted[key] = match[0] ? match[0].trim() : null;
+        } else {
+          extracted[key] = null;
+        }
+      } else {
+        extracted[key] = match ? match[1].trim() : null;
+      }
     }
 
     // Parse addresses
     extracted.shipToAddress = this.extractAddress(text, 'Ship To');
     extracted.billToAddress = this.extractAddress(text, 'Bill To');
     extracted.installationAddress = this.extractAddress(text, 'Installation Address');
+
+    // Set vendor name default if found
+    if (!extracted.vendorName && text.match(/Vodafone\s*Idea/i)) {
+      extracted.vendorName = 'Vodafone Idea';
+    }
+
+    // Extract vendor email if pattern didn't work
+    if (!extracted.vendorEmail && text.includes('vbsbillingsupport.in@vodafoneidea.com')) {
+      extracted.vendorEmail = 'vbsbillingsupport.in@vodafoneidea.com';
+    }
 
     return extracted;
   }
@@ -217,16 +298,22 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
       }
 
       // Format dates
-      if (extractedData.billDate) {
-        extractedData.billDate = this.formatDate(extractedData.billDate);
-      }
-      if (extractedData.dueDate) {
-        extractedData.dueDate = this.formatDate(extractedData.dueDate);
+      const dateFields = ['billDate', 'dueDate', 'poDate', 'servicePeriodFrom', 'servicePeriodTo'];
+      for (const field of dateFields) {
+        if (extractedData[field]) {
+          extractedData[field] = this.formatDate(extractedData[field]);
+        }
       }
 
       // Clean numeric values
-      const numericFields = ['totalPayable', 'subTotal', 'tax', 'bandwidth',
-        'recurringCharges', 'oneTimeCharges', 'usageCharges', 'cgst', 'sgst'];
+      const numericFields = [
+        'totalPayable', 'subTotal', 'tax', 'bandwidth',
+        'recurringCharges', 'oneTimeCharges', 'usageCharges',
+        'cgst', 'sgst', 'igst',
+        'cgstAmount', 'sgstAmount', 'igstAmount', 'totalTaxAmount',
+        'previousOutstanding', 'totalValueOfServices', 'totalTaxableCharges',
+        'miscCharges', 'annualCharges', 'poArcValue'
+      ];
 
       for (const field of numericFields) {
         if (extractedData[field]) {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Download, RefreshCw, CheckCircle, XCircle, Clock, RotateCcw, FileText, FileJson, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCw, CheckCircle, XCircle, Clock, RotateCcw, FileText, FileJson, AlertCircle, Edit, Shield } from 'lucide-react';
 import { uploadAPI } from '../services/api';
 import { format } from 'date-fns';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const BatchDetailsPage = () => {
   const { batchId } = useParams();
@@ -13,6 +14,12 @@ const BatchDetailsPage = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
   useEffect(() => {
     loadBatchDetails();
@@ -50,40 +57,50 @@ const BatchDetailsPage = () => {
     toast.success('Download started');
   };
 
-  const handleRetryBatch = async () => {
-    if (!confirm('Retry all failed files in this batch?')) return;
-
-    try {
-      const response = await uploadAPI.retryBatch(batchId, { useAI: true });
-      if (response.success) {
-        toast.success(response.message);
-        loadBatchDetails();
+  const handleRetryBatch = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Retry Batch',
+      message: 'Are you sure you want to retry all failed files in this batch?',
+      onConfirm: async () => {
+        try {
+          const response = await uploadAPI.retryBatch(batchId, { useAI: true });
+          if (response.success) {
+            toast.success(response.message);
+            loadBatchDetails();
+          }
+        } catch (error) {
+          toast.error('Failed to retry batch');
+        }
       }
-    } catch (error) {
-      toast.error('Failed to retry batch');
-    }
+    });
   };
 
-  const handleRetrySingleFile = async (fileId, filename) => {
-    if (!confirm(`Retry processing for ${filename}?`)) return;
-
-    try {
-      const response = await uploadAPI.retrySingleFile(batchId, fileId, { useAI: true });
-      if (response.success) {
-        toast.success(`Retrying ${filename}`);
-        loadBatchDetails();
+  const handleRetrySingleFile = (fileId, filename) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Retry File',
+      message: `Are you sure you want to retry processing for "${filename}"?`,
+      onConfirm: async () => {
+        try {
+          const response = await uploadAPI.retrySingleFile(batchId, fileId, { useAI: true });
+          if (response.success) {
+            toast.success(`Retrying ${filename}`);
+            loadBatchDetails();
+          }
+        } catch (error) {
+          toast.error('Failed to retry file');
+        }
       }
-    } catch (error) {
-      toast.error('Failed to retry file');
-    }
+    });
   };
 
   const getStatusIcon = (status) => {
     const icons = {
-      pending: <Clock className="h-5 w-5 text-yellow-500" />,
-      processing: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500" />,
-      completed: <CheckCircle className="h-5 w-5 text-green-500" />,
-      failed: <XCircle className="h-5 w-5 text-red-500" />,
+      pending: <Clock className="h-5 w-5 text-amber-600 text-warning-500" />,
+      processing: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-info-500" />,
+      completed: <CheckCircle className="h-5 w-5 text-green-600 text-success-500" />,
+      failed: <XCircle className="h-5 w-5 text-red-600 text-error-500" />,
     };
     return icons[status] || icons.pending;
   };
@@ -99,7 +116,7 @@ const BatchDetailsPage = () => {
   if (!batch) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Batch not found</p>
+        <p className="text-gray-500 dark:text-gray-400">Batch not found</p>
         <button
           onClick={() => navigate('/batches')}
           className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
@@ -123,11 +140,11 @@ const BatchDetailsPage = () => {
             onClick={() => navigate('/batches')}
             className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <ArrowLeft className="h-6 w-6 text-gray-600" />
+            <ArrowLeft className="h-6 w-6 text-gray-600 dark:text-gray-300" />
           </button>
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">{batch.batch_name}</h2>
-            <p className="mt-1 text-gray-600">Batch ID: {batch.id}</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{batch.batch_name}</h2>
+            <p className="mt-1 text-gray-600 dark:text-gray-300">Batch ID: {batch.id}</p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
@@ -151,6 +168,24 @@ const BatchDetailsPage = () => {
               Retry Failed ({batch.failed_files})
             </button>
           )}
+          <button
+            onClick={() => navigate(`/batches/${batchId}/validation`)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg
+                     hover:bg-blue-700 transition-colors"
+            title="View validation results"
+          >
+            <Shield className="h-4 w-4 mr-1" />
+            Validation
+          </button>
+          <button
+            onClick={() => navigate(`/batches/${batchId}/corrections`)}
+            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg
+                     hover:bg-purple-700 transition-colors"
+            title="Manual data correction"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Corrections
+          </button>
           {batch.excel_file_path && (
             <>
               <button
@@ -206,8 +241,8 @@ const BatchDetailsPage = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Files</p>
-              <p className="text-2xl font-bold text-gray-900">{batch.total_files}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Total Files</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{batch.total_files}</p>
             </div>
           </div>
         </div>
@@ -215,27 +250,27 @@ const BatchDetailsPage = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Processed</p>
-              <p className="text-2xl font-bold text-green-600">{batch.processed_files}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Processed</p>
+              <p className="text-2xl font-bold text-success-600">{batch.processed_files}</p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
+            <CheckCircle className="h-8 w-8 text-success-500" />
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Failed</p>
-              <p className="text-2xl font-bold text-red-600">{batch.failed_files}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Failed</p>
+              <p className="text-2xl font-bold text-error-600">{batch.failed_files}</p>
             </div>
-            <XCircle className="h-8 w-8 text-red-500" />
+            <XCircle className="h-8 w-8 text-error-500" />
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Progress</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Progress</p>
               <p className="text-2xl font-bold text-primary-600">{progressPercentage}%</p>
             </div>
           </div>
@@ -245,7 +280,7 @@ const BatchDetailsPage = () => {
       {/* Progress Bar */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">Processing Status</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Processing Status</span>
           <span className="text-sm text-gray-500 capitalize">{batch.status}</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-4">
@@ -258,12 +293,12 @@ const BatchDetailsPage = () => {
 
       {/* PDF Records */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">PDF Files</h3>
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">PDF Files</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Filename
@@ -282,10 +317,10 @@ const BatchDetailsPage = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700">
               {pdfRecords.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={record.id} className="hover:bg-gray-50 dark:bg-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {record.filename}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -294,19 +329,19 @@ const BatchDetailsPage = () => {
                       <span className="ml-2 text-sm capitalize">{record.status}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {record.processing_time_ms
                       ? `${(record.processing_time_ms / 1000).toFixed(2)}s`
                       : '-'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-red-600">
+                  <td className="px-6 py-4 text-sm text-error-600">
                     {record.error_message || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     {record.status === 'failed' && (
                       <button
                         onClick={() => handleRetrySingleFile(record.id, record.filename)}
-                        className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+                        className="text-warning-600 hover:text-warning-700 font-medium text-sm"
                         title="Retry this file"
                       >
                         <RotateCcw className="h-4 w-4 inline mr-1" />
@@ -324,8 +359,8 @@ const BatchDetailsPage = () => {
       {/* Processing Logs */}
       {logs.length > 0 && (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Processing Logs</h3>
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Processing Logs</h3>
           </div>
           <div className="px-6 py-4 max-h-96 overflow-y-auto">
             {logs.map((log) => (
@@ -333,9 +368,9 @@ const BatchDetailsPage = () => {
                 key={log.id}
                 className={`mb-2 p-3 rounded-lg text-sm ${
                   log.log_level === 'error'
-                    ? 'bg-red-50 text-red-800'
+                    ? 'bg-error-50 text-error-800'
                     : log.log_level === 'warning'
-                    ? 'bg-yellow-50 text-yellow-800'
+                    ? 'bg-warning-50 text-warning-800'
                     : 'bg-gray-50 text-gray-800'
                 }`}
               >
@@ -351,6 +386,14 @@ const BatchDetailsPage = () => {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmButtonClass="bg-primary-600 hover:bg-primary-700"
+      />
     </div>
   );
 };

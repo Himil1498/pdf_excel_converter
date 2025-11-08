@@ -185,6 +185,13 @@ class TemplateController {
     try {
       const { templateId } = req.params;
 
+      if (!templateId || templateId === 'undefined' || templateId === 'null') {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid template ID'
+        });
+      }
+
       const result = await db.query(
         'DELETE FROM field_templates WHERE id = ?',
         [templateId]
@@ -336,6 +343,13 @@ class TemplateController {
   static async deleteCustomField(req, res) {
     try {
       const { fieldId } = req.params;
+
+      if (!fieldId || fieldId === 'undefined' || fieldId === 'null') {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid field ID'
+        });
+      }
 
       const result = await db.query(
         'DELETE FROM custom_fields WHERE id = ?',
