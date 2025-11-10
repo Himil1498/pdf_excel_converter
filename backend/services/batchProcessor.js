@@ -201,7 +201,7 @@ class BatchProcessor {
    */
   async generateBatchExcel(batchId) {
     // Fetch all invoice data for this batch
-    const records = await db.query(
+    const [records] = await db.query(
       'SELECT * FROM pdf_records WHERE batch_id = ? AND status = ?',
       [batchId, 'completed']
     );
@@ -237,7 +237,7 @@ class BatchProcessor {
    * Get template by ID
    */
   async getTemplate(templateId) {
-    const templates = await db.query(
+    const [templates] = await db.query(
       'SELECT * FROM field_templates WHERE id = ?',
       [templateId]
     );
@@ -283,7 +283,7 @@ class BatchProcessor {
    * Get batch status
    */
   async getBatchStatus(batchId) {
-    const batches = await db.query(
+    const [batches] = await db.query(
       'SELECT * FROM upload_batches WHERE id = ?',
       [batchId]
     );

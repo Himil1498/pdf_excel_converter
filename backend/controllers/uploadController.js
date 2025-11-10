@@ -76,7 +76,7 @@ class UploadController {
       }
 
       // Check for duplicate batch name
-      const existing = await db.query(
+      const [existing] = await db.query(
         'SELECT id FROM upload_batches WHERE batch_name = ?',
         [batchName]
       );
@@ -89,7 +89,7 @@ class UploadController {
       }
 
       // Create batch record
-      const batchResult = await db.query(
+      const [batchResult] = await db.query(
         'INSERT INTO upload_batches (batch_name, total_files, status) VALUES (?, ?, ?)',
         [batchName, files.length, 'pending']
       );
@@ -99,7 +99,7 @@ class UploadController {
       // Create PDF records
       const pdfRecords = [];
       for (const file of files) {
-        const result = await db.query(
+        const [result] = await db.query(
           'INSERT INTO pdf_records (batch_id, filename, file_path, status) VALUES (?, ?, ?, ?)',
           [batchId, file.originalname, file.path, 'pending']
         );
@@ -221,11 +221,11 @@ class UploadController {
 
       // Get batches
       const sql = `SELECT * FROM upload_batches ${whereClause} ORDER BY ${sortField} ${order} LIMIT ${limitInt} OFFSET ${offsetInt}`;
-      const batches = await db.query(sql, params);
+      const [batches] = await db.query(sql, params);
 
       // Get total count
       const countSql = `SELECT COUNT(*) as count FROM upload_batches ${whereClause}`;
-      const total = await db.query(countSql, params);
+      const [total] = await db.query(countSql, params);
 
       res.json({
         success: true,
@@ -255,7 +255,7 @@ class UploadController {
     try {
       const { batchId } = req.params;
 
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -296,7 +296,7 @@ class UploadController {
     try {
       const { batchId } = req.params;
 
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -309,7 +309,7 @@ class UploadController {
       }
 
       // Get all invoice data
-      const invoiceData = await db.query(
+      const [invoiceData] = await db.query(
         'SELECT * FROM invoice_data WHERE batch_id = ?',
         [batchId]
       );
@@ -360,7 +360,7 @@ class UploadController {
     try {
       const { batchId } = req.params;
 
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -373,7 +373,7 @@ class UploadController {
       }
 
       // Get all invoice data
-      const invoiceData = await db.query(
+      const [invoiceData] = await db.query(
         'SELECT * FROM invoice_data WHERE batch_id = ?',
         [batchId]
       );
@@ -415,7 +415,7 @@ class UploadController {
     try {
       const { batchId } = req.params;
 
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -428,7 +428,7 @@ class UploadController {
       }
 
       // Get failed files
-      const failedFiles = await db.query(
+      const [failedFiles] = await db.query(
         'SELECT id, filename, status, error_message, created_at, updated_at FROM pdf_records WHERE batch_id = ? AND status = ?',
         [batchId, 'failed']
       );
@@ -478,7 +478,7 @@ class UploadController {
     try {
       const { batchId } = req.params;
 
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -490,12 +490,12 @@ class UploadController {
         });
       }
 
-      const pdfRecords = await db.query(
+      const [pdfRecords] = await db.query(
         'SELECT * FROM pdf_records WHERE batch_id = ? ORDER BY created_at ASC',
         [batchId]
       );
 
-      const logs = await db.query(
+      const [logs] = await db.query(
         'SELECT * FROM processing_logs WHERE batch_id = ? ORDER BY created_at DESC LIMIT 100',
         [batchId]
       );
@@ -527,7 +527,7 @@ class UploadController {
       const { batchId } = req.params;
 
       // Get batch info to delete files
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -540,7 +540,7 @@ class UploadController {
       }
 
       // Get PDF records to delete files
-      const pdfRecords = await db.query(
+      const [pdfRecords] = await db.query(
         'SELECT file_path FROM pdf_records WHERE batch_id = ?',
         [batchId]
       );
@@ -591,7 +591,7 @@ class UploadController {
       const { useAI = true, templateId = null } = req.body;
 
       // Get batch info
-      const batches = await db.query(
+      const [batches] = await db.query(
         'SELECT * FROM upload_batches WHERE id = ?',
         [batchId]
       );
@@ -604,7 +604,7 @@ class UploadController {
       }
 
       // Get failed files
-      const failedFiles = await db.query(
+      const [failedFiles] = await db.query(
         'SELECT * FROM pdf_records WHERE batch_id = ? AND status = ?',
         [batchId, 'failed']
       );
@@ -670,7 +670,7 @@ class UploadController {
       for (const batchId of batchIds) {
         try {
           // Get batch info
-          const batches = await db.query(
+          const [batches] = await db.query(
             'SELECT * FROM upload_batches WHERE id = ?',
             [batchId]
           );
@@ -681,7 +681,7 @@ class UploadController {
           }
 
           // Get PDF records to delete files
-          const pdfRecords = await db.query(
+          const [pdfRecords] = await db.query(
             'SELECT file_path FROM pdf_records WHERE batch_id = ?',
             [batchId]
           );
@@ -741,7 +741,7 @@ class UploadController {
       const { useAI = true, templateId = null } = req.body;
 
       // Get file record
-      const files = await db.query(
+      const [files] = await db.query(
         'SELECT * FROM pdf_records WHERE id = ? AND batch_id = ?',
         [fileId, batchId]
       );
@@ -778,6 +778,68 @@ class UploadController {
       res.status(500).json({
         success: false,
         message: 'Failed to retry file',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Regenerate Excel file for a batch
+   */
+  static async regenerateExcel(req, res) {
+    try {
+      const { batchId } = req.params;
+
+      // Get batch info
+      const [batches] = await db.query(
+        'SELECT * FROM upload_batches WHERE id = ?',
+        [batchId]
+      );
+
+      if (batches.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Batch not found'
+        });
+      }
+
+      const batch = batches[0];
+
+      // Check if batch has completed files
+      const [completedFiles] = await db.query(
+        'SELECT COUNT(*) as count FROM pdf_records WHERE batch_id = ? AND status = ?',
+        [batchId, 'completed']
+      );
+
+      if (completedFiles[0].count === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No successfully processed files found in this batch'
+        });
+      }
+
+      // Generate Excel file using batch processor
+      const BatchProcessor = require('../services/batchProcessor');
+      const processor = new BatchProcessor();
+      const excelPath = await processor.generateBatchExcel(batchId);
+
+      // Update batch with new Excel path
+      await db.query(
+        'UPDATE upload_batches SET excel_file_path = ? WHERE id = ?',
+        [excelPath, batchId]
+      );
+
+      res.json({
+        success: true,
+        message: 'Excel file generated successfully',
+        excelPath
+      });
+
+    } catch (error) {
+      console.error('Regenerate Excel error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to regenerate Excel file',
         error: error.message
       });
     }

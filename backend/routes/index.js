@@ -33,6 +33,9 @@ router.get('/batches/:batchId', UploadController.getBatchDetails);
 // Download Excel file
 router.get('/batches/:batchId/download', UploadController.downloadExcel);
 
+// Regenerate Excel file for a batch
+router.post('/batches/:batchId/regenerate-excel', UploadController.regenerateExcel);
+
 // Download CSV file
 router.get('/batches/:batchId/download/csv', UploadController.downloadCSV);
 

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
-import { templateAPI } from '../services/api';
-import TemplateModal from '../components/TemplateModal';
-import CustomFieldModal from '../components/CustomFieldModal';
-import ConfirmDialog from '../components/ConfirmDialog';
+import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { templateAPI } from "../services/api";
+import TemplateModal from "../components/TemplateModal";
+import CustomFieldModal from "../components/CustomFieldModal";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const TemplatesPage = () => {
   const [templates, setTemplates] = useState([]);
@@ -16,8 +16,8 @@ const TemplatesPage = () => {
   const [editingField, setEditingField] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     onConfirm: () => {}
   });
 
@@ -30,13 +30,13 @@ const TemplatesPage = () => {
       setLoading(true);
       const [templatesRes, fieldsRes] = await Promise.all([
         templateAPI.getTemplates(),
-        templateAPI.getCustomFields(),
+        templateAPI.getCustomFields()
       ]);
 
       if (templatesRes.success) setTemplates(templatesRes.data);
       if (fieldsRes.success) setCustomFields(fieldsRes.data);
     } catch (error) {
-      toast.error('Failed to load data');
+      toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -46,16 +46,16 @@ const TemplatesPage = () => {
     try {
       if (editingTemplate) {
         await templateAPI.updateTemplate(editingTemplate.id, templateData);
-        toast.success('Template updated successfully');
+        toast.success("Template updated successfully");
       } else {
         await templateAPI.createTemplate(templateData);
-        toast.success('Template created successfully');
+        toast.success("Template created successfully");
       }
       setShowTemplateModal(false);
       setEditingTemplate(null);
       loadData();
     } catch (error) {
-      toast.error(error.message || 'Failed to save template');
+      toast.error(error.message || "Failed to save template");
     }
   };
 
@@ -63,36 +63,36 @@ const TemplatesPage = () => {
     try {
       if (editingField) {
         await templateAPI.updateCustomField(editingField.id, fieldData);
-        toast.success('Field updated successfully');
+        toast.success("Field updated successfully");
       } else {
         await templateAPI.createCustomField(fieldData);
-        toast.success('Field created successfully');
+        toast.success("Field created successfully");
       }
       setShowFieldModal(false);
       setEditingField(null);
       loadData();
     } catch (error) {
-      toast.error(error.message || 'Failed to save field');
+      toast.error(error.message || "Failed to save field");
     }
   };
 
   const handleDeleteTemplate = (templateId, templateName) => {
     if (!templateId) {
-      toast.error('Invalid template ID');
+      toast.error("Invalid template ID");
       return;
     }
 
     setConfirmDialog({
       isOpen: true,
-      title: 'Delete Template',
+      title: "Delete Template",
       message: `Are you sure you want to delete template "${templateName}"? This action cannot be undone.`,
       onConfirm: async () => {
         try {
           await templateAPI.deleteTemplate(templateId);
-          toast.success('Template deleted');
+          toast.success("Template deleted");
           loadData();
         } catch (error) {
-          toast.error('Failed to delete template');
+          toast.error("Failed to delete template");
         }
       }
     });
@@ -100,21 +100,21 @@ const TemplatesPage = () => {
 
   const handleDeleteField = (fieldId, fieldName) => {
     if (!fieldId) {
-      toast.error('Invalid field ID');
+      toast.error("Invalid field ID");
       return;
     }
 
     setConfirmDialog({
       isOpen: true,
-      title: 'Delete Custom Field',
+      title: "Delete Custom Field",
       message: `Are you sure you want to delete field "${fieldName}"? This action cannot be undone.`,
       onConfirm: async () => {
         try {
           await templateAPI.deleteCustomField(fieldId);
-          toast.success('Field deleted');
+          toast.success("Field deleted");
           loadData();
         } catch (error) {
-          toast.error('Failed to delete field');
+          toast.error("Failed to delete field");
         }
       }
     });
@@ -132,7 +132,9 @@ const TemplatesPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Templates & Fields</h2>
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Templates & Fields
+        </h2>
         <p className="mt-2 text-gray-600 dark:text-gray-300">
           Manage extraction templates and custom field configurations
         </p>
@@ -141,7 +143,9 @@ const TemplatesPage = () => {
       {/* Templates Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Extraction Templates</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Extraction Templates
+          </h3>
           <button
             onClick={() => {
               setEditingTemplate(null);
@@ -157,26 +161,28 @@ const TemplatesPage = () => {
 
         <div className="p-6">
           {templates.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No templates found</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+              No templates found
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md dark:shadow-gray-900/50 transition-shadow"
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md dark:hover:shadow-gray-900/50 transition-shadow bg-white dark:bg-gray-800"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {template.template_name}
                         {template.is_default && (
-                          <span className="ml-2 text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded-full">
+                          <span className="ml-2 text-xs px-2 py-1 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-full">
                             Default
                           </span>
                         )}
                       </h4>
                       {template.vendor_name && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           Vendor: {template.vendor_name}
                         </p>
                       )}
@@ -187,20 +193,26 @@ const TemplatesPage = () => {
                           setEditingTemplate(template);
                           setShowTemplateModal(true);
                         }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                       >
-                        <Edit className="h-5 w-5 text-blue-600" />
+                        <Edit className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteTemplate(template.id, template.template_name)}
-                        className="p-2 text-error-600 hover:bg-error-50 rounded-lg transition-colors"
+                        onClick={() =>
+                          handleDeleteTemplate(
+                            template.id,
+                            template.template_name
+                          )
+                        }
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                       >
-                        <Trash2 className="h-5 w-5 text-red-600" />
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Created: {new Date(template.created_at).toLocaleDateString()}
+                    Created:{" "}
+                    {new Date(template.created_at).toLocaleDateString()}
                   </p>
                 </div>
               ))}
@@ -212,7 +224,9 @@ const TemplatesPage = () => {
       {/* Custom Fields Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Custom Fields</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Custom Fields
+          </h3>
           <button
             onClick={() => {
               setEditingField(null);
@@ -228,35 +242,40 @@ const TemplatesPage = () => {
 
         <div className="overflow-x-auto">
           {customFields.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No custom fields defined</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+              No custom fields defined
+            </p>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Field Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Excel Column
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {customFields.map((field) => (
-                  <tr key={field.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
+                  <tr
+                    key={field.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {field.field_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
                       {field.field_type}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -266,11 +285,11 @@ const TemplatesPage = () => {
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${
                           field.is_active
-                            ? 'bg-success-100 text-success-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
                         }`}
                       >
-                        {field.is_active ? 'Active' : 'Inactive'}
+                        {field.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -280,15 +299,17 @@ const TemplatesPage = () => {
                             setEditingField(field);
                             setShowFieldModal(true);
                           }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                         >
-                          <Edit className="h-5 w-5 text-blue-600" />
+                          <Edit className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={() => handleDeleteField(field.id, field.field_name)}
-                          className="p-2 text-error-600 hover:bg-error-50 rounded-lg transition-colors"
+                          onClick={() =>
+                            handleDeleteField(field.id, field.field_name)
+                          }
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                         >
-                          <Trash2 className="h-5 w-5 text-red-600" />
+                          <Trash2 className="h-5 w-5" />
                         </button>
                       </div>
                     </td>
@@ -301,13 +322,19 @@ const TemplatesPage = () => {
       </div>
 
       {/* Template Configuration Info */}
-      <div className="bg-info-50 border border-info-200 rounded-lg p-6">
-        <h4 className="text-sm font-semibold text-info-900 mb-2">About Templates</h4>
-        <ul className="text-sm text-info-800 space-y-1">
-          <li>• Templates define extraction patterns for different PDF formats</li>
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+          About Templates
+        </h4>
+        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+          <li>
+            • Templates define extraction patterns for different PDF formats
+          </li>
           <li>• Set a default template for your most common vendor</li>
           <li>• Use regex patterns to extract specific fields from PDFs</li>
-          <li>• AI extraction can work without templates for better accuracy</li>
+          <li>
+            • AI extraction can work without templates for better accuracy
+          </li>
         </ul>
       </div>
 

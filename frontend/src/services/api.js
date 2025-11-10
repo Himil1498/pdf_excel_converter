@@ -72,6 +72,8 @@ export const uploadAPI = {
   retryBatch: (batchId, options = {}) => api.post(`/batches/${batchId}/retry`, options),
 
   retrySingleFile: (batchId, fileId, options = {}) => api.post(`/batches/${batchId}/files/${fileId}/retry`, options),
+
+  regenerateExcel: (batchId) => api.post(`/batches/${batchId}/regenerate-excel`),
 };
 
 export const templateAPI = {
