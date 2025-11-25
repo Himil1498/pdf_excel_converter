@@ -38,7 +38,6 @@ PDF_EXCEL_CONVERT_APP/
 │   │   ├── database.js           # MySQL pool config
 │   │   └── airtelTemplate.js     # Airtel vendor template (NEW)
 │   ├── controllers/
-│   │   ├── templateController.js
 │   │   └── uploadController.js
 │   ├── services/                 # Core business logic
 │   │   ├── pdfParser.js         # PDF text extraction + AI
@@ -72,7 +71,6 @@ PDF_EXCEL_CONVERT_APP/
 │   │   ├── UploadPage.jsx       # Bulk PDF upload
 │   │   ├── BatchesPage.jsx      # View all batches
 │   │   ├── BatchDetailsPage.jsx # Batch details + export
-│   │   ├── TemplatesPage.jsx    # Template management
 │   │   ├── AnalyticsDashboardPage.jsx
 │   │   ├── SearchPage.jsx       # Advanced search
 │   │   ├── ComparisonPage.jsx   # Invoice comparison
@@ -83,8 +81,6 @@ PDF_EXCEL_CONVERT_APP/
 │   │   ├── Layout.jsx
 │   │   ├── ThemeToggle.jsx
 │   │   ├── AlertsNotification.jsx
-│   │   ├── TemplateModal.jsx
-│   │   ├── CustomFieldModal.jsx
 │   │   ├── InvoiceDetailsModal.jsx
 │   │   └── ConfirmDialog.jsx
 │   ├── contexts/ThemeContext.jsx
@@ -110,8 +106,6 @@ PDF_EXCEL_CONVERT_APP/
 - **upload_batches** - Batch processing records (id, batch_name, status, total_files, processed_files, failed_files)
 - **pdf_records** - Individual PDF files (id, batch_id, filename, status, extracted_data JSON, error_message)
 - **invoice_data** - Extracted invoice fields (50+ columns including vendor, amounts, taxes, dates, locations)
-- **field_templates** - Extraction templates for different vendors
-- **custom_fields** - User-defined custom fields
 - **processing_logs** - Processing history
 
 ### New Feature Tables (Require Migration)
@@ -189,7 +183,7 @@ NODE_ENV=development
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=H!m!l@1498@!!
+DB_PASSWORD=Ved@1498@!!
 DB_NAME=pdf_excel_converter
 
 # File Upload
@@ -314,11 +308,9 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 1. Vodafone Idea Limited ✅
 - **Vendor Type**: `vodafone`
-- **Template**: 110 columns (batch format)
+- **Excel Format**: 110 columns (batch format)
 - **Vendor Name**: "Vodafone Idea Limited" / "Vodafone Idea"
-- **Excel Format**: Custom batch format with regional breakdowns
-- **Config**: Built-in extraction patterns
-- **Template File**: `backend/config/vodafoneTemplate.js` (implicit in pdfParser)
+- **Config**: Built-in extraction patterns in `backend/services/pdfParser.js`
 - **Test Status**: ✅ Passed (3/3 PDFs processed successfully)
 - **Key Features**:
   - Branch Name with regions (Maharashtra, Gujarat, etc.)
@@ -328,11 +320,9 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 2. Tata Teleservices ✅
 - **Vendor Type**: `tata`
-- **Template**: 110+ columns (custom Tata format)
+- **Excel Format**: 110+ columns (custom Tata format)
 - **Vendor Name**: "Tata Teleservices" / "TATA Communications"
-- **Excel Format**: Custom Tata format
-- **Config**: Built-in extraction patterns
-- **Template File**: `backend/config/tataTemplate.js` (implicit in pdfParser)
+- **Config**: Built-in extraction patterns in `backend/services/pdfParser.js`
 - **Test Status**: ✅ Passed (3/3 PDFs processed successfully)
 - **Key Features**:
   - Detailed line item breakdown
@@ -342,9 +332,8 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 3. Bharti Airtel Limited ✅
 - **Vendor Type**: `airtel`
-- **Template**: 110 columns (ZOHO format)
+- **Excel Format**: 110 columns (ZOHO format - matches AIRTEL EXCEL FORMET.xlsx)
 - **Vendor Name**: "BHARTI AIRTEL LIMITED"
-- **Excel Format**: ZOHO Books format (matches AIRTEL EXCEL FORMET.xlsx)
 - **Config**: `backend/config/airtelTemplate.js`
 - **Test Status**: ✅ Passed (3/3 PDFs processed successfully)
 - **Added**: November 2025
@@ -358,9 +347,8 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 4. Indus Towers Limited ✅
 - **Vendor Type**: `indus`
-- **Template**: 110 columns (ZOHO format)
+- **Excel Format**: 110 columns (ZOHO Books format - matches Indus format)
 - **Vendor Name**: "Indus Towers Limited"
-- **Excel Format**: ZOHO Books format (matches Indus format)
 - **Config**: `backend/config/indusTemplate.js`
 - **Test Status**: ✅ Passed (3/3 PDFs processed successfully)
 - **Added**: November 2025
@@ -372,9 +360,8 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 5. Ascend Telecom Infrastructure ✅
 - **Vendor Type**: `ascend`
-- **Template**: 110 columns (ZOHO format)
+- **Excel Format**: 110 columns (ZOHO Books format)
 - **Vendor Name**: "Ascend Telecom Infrastructure"
-- **Excel Format**: ZOHO Books format
 - **Config**: `backend/config/ascendTemplate.js`
 - **Test Status**: ✅ Passed (2/2 PDFs processed successfully)
 - **Added**: November 2025
@@ -386,9 +373,8 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 6. Sify Technologies Limited ✅
 - **Vendor Type**: `sify`
-- **Template**: 110 columns (ZOHO format)
+- **Excel Format**: 110 columns (ZOHO Books format)
 - **Vendor Name**: "Sify Technologies Limited"
-- **Excel Format**: ZOHO Books format
 - **Config**: `backend/config/sifyTemplate.js`
 - **Test Status**: ✅ Passed (3/3 PDFs processed successfully)
 - **Added**: November 2025
@@ -400,9 +386,8 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
 
 #### 7. BSNL (Bharat Sanchar Nigam) ✅
 - **Vendor Type**: `bsnl`
-- **Template**: 109 columns (ZOHO format)
+- **Excel Format**: 109 columns (ZOHO Books format)
 - **Vendor Name**: "BSNL" / "Bharat Sanchar Nigam Limited"
-- **Excel Format**: ZOHO Books format
 - **Config**: `backend/config/bsnlTemplate.js`
 - **Test Status**: ✅ Passed (3/3 PDFs processed successfully)
 - **Added**: November 2025
@@ -412,8 +397,8 @@ The application now supports **7 telecom vendors** with complete PDF parsing, da
   - GST compliance
   - Branch-wise billing
 
-### Template Configuration Summary
-Templates define regex patterns for:
+### Vendor Configuration
+Each vendor has a config file that defines regex patterns for:
 - Invoice number, dates, amounts
 - Vendor/customer details
 - Line items
@@ -422,7 +407,7 @@ Templates define regex patterns for:
 - Addresses, payment terms
 - Branch/Region names (Karnataka Region, Maharashtra Region, Gujarat Region, etc.)
 
-## API Endpoints (54 Total)
+## API Endpoints (46 Total)
 
 ### Core
 - POST /api/upload - Upload PDFs
@@ -430,12 +415,6 @@ Templates define regex patterns for:
 - GET /api/batches/:id - Batch details
 - GET /api/batches/:id/download - Export Excel
 - DELETE /api/batches/:id - Delete batch
-
-### Templates
-- GET /api/templates - List templates
-- POST /api/templates - Create template
-- PUT /api/templates/:id - Update
-- DELETE /api/templates/:id - Delete
 
 ### Analytics
 - GET /api/analytics/overview
@@ -783,7 +762,7 @@ When adding a new vendor:
 
 **Last Updated**: November 24, 2025
 **Status**: ✅ PRODUCTION READY - All 7 vendors tested and verified
-**MySQL Password**: H!m!l@1498@!!
+**MySQL Password**: Ved@1498@!!
 **Backend Port**: 5000/5001
 **Frontend Port**: 3000/5173
 

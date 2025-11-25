@@ -125,29 +125,6 @@ const Layout = () => {
                 )}
               </NavLink>
               <NavLink
-                to="/templates"
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 font-medium"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <FileText
-                      className={`h-5 w-5 mr-2 ${
-                        isActive
-                          ? "text-cyan-700 dark:text-cyan-300"
-                          : "text-cyan-600 dark:text-cyan-400"
-                      }`}
-                    />
-                    <span>Templates</span>
-                  </>
-                )}
-              </NavLink>
-              <NavLink
                 to="/comparison"
                 className={({ isActive }) =>
                   `flex items-center px-3 py-2 rounded-lg transition-colors ${
@@ -302,29 +279,6 @@ const Layout = () => {
                       }`}
                     />
                     <span>Search</span>
-                  </>
-                )}
-              </NavLink>
-              <NavLink
-                to="/templates"
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 font-medium"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <FileText
-                      className={`h-4 w-4 mr-1 ${
-                        isActive
-                          ? "text-cyan-700 dark:text-cyan-300"
-                          : "text-cyan-600 dark:text-cyan-400"
-                      }`}
-                    />
-                    <span>Templates</span>
                   </>
                 )}
               </NavLink>

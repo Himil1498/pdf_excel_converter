@@ -134,9 +134,7 @@ app.get('/', (req, res) => {
       upload: 'POST /api/upload',
       batches: 'GET /api/batches',
       batchStatus: 'GET /api/batches/:batchId/status',
-      downloadExcel: 'GET /api/batches/:batchId/download',
-      templates: 'GET /api/templates',
-      customFields: 'GET /api/custom-fields'
+      downloadExcel: 'GET /api/batches/:batchId/download'
     }
   });
 });

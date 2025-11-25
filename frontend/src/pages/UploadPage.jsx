@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import toast from "react-hot-toast";
 import { Upload, X, FileText, Settings, Sparkles } from "lucide-react";
-import { uploadAPI, templateAPI } from "../services/api";
+import { uploadAPI } from "../services/api";
 
 const UploadPage = () => {
   const navigate = useNavigate();
@@ -12,30 +12,8 @@ const UploadPage = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [batchName, setBatchName] = useState("");
   const [useAI, setUseAI] = useState(true);
-  const [templateId, setTemplateId] = useState("");
-  const [templates, setTemplates] = useState([]);
   const [includeBlankColumns, setIncludeBlankColumns] = useState(true);
   const [vendorType, setVendorType] = useState("vodafone");
-
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
-  const loadTemplates = async () => {
-    try {
-      const response = await templateAPI.getTemplates();
-      if (response.success) {
-        setTemplates(response.data);
-        // Set default template if available
-        const defaultTemplate = response.data.find((t) => t.is_default);
-        if (defaultTemplate) {
-          setTemplateId(defaultTemplate.id.toString());
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load templates:", error);
-    }
-  };
 
   const onDrop = useCallback(
     (acceptedFiles) => {
@@ -117,9 +95,6 @@ const UploadPage = () => {
       formData.append("useAI", useAI);
       formData.append("includeBlankColumns", includeBlankColumns);
       formData.append("vendorType", vendorType);
-      if (templateId) {
-        formData.append("templateId", templateId);
-      }
 
       const response = await uploadAPI.uploadPDFs(formData, (progressEvent) => {
         const percentCompleted = Math.round(
@@ -203,28 +178,6 @@ const UploadPage = () => {
               <option value="ascend">Ascend Telecom Infrastructure</option>
               <option value="sify">Sify Technologies Limited</option>
               <option value="bsnl">BSNL (Bharat Sanchar Nigam)</option>
-            </select>
-          </div>
-
-          {/* Template Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-              Extraction Template
-            </label>
-            <select
-              value={templateId}
-              onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            >
-              <option key="auto-detect" value="">
-                Auto-detect (AI)
-              </option>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.template_name}
-                  {template.is_default && " (Default)"}
-                </option>
-              ))}
             </select>
           </div>
         </div>

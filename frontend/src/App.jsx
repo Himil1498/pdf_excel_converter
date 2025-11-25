@@ -6,7 +6,6 @@ import Layout from './components/Layout';
 import UploadPage from './pages/UploadPage';
 import BatchesPage from './pages/BatchesPage';
 import BatchDetailsPage from './pages/BatchDetailsPage';
-import TemplatesPage from './pages/TemplatesPage';
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import SearchPage from './pages/SearchPage';
 import ValidationPage from './pages/ValidationPage';
@@ -57,7 +56,6 @@ function App() {
           <Route path="batches/:batchId" element={<BatchDetailsPage />} />
           <Route path="batches/:batchId/validation" element={<ValidationPage />} />
           <Route path="batches/:batchId/corrections" element={<CorrectionPage />} />
-          <Route path="templates" element={<TemplatesPage />} />
           <Route path="analytics" element={<AnalyticsDashboardPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="comparison" element={<ComparisonPage />} />

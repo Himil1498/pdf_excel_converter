@@ -11,17 +11,16 @@ This folder contains the complete database schema and queries for the PDF to Exc
 
 This is the **complete, consolidated database schema file** that includes:
 
-- **Complete Schema**: All 13 tables with full structure
+- **Complete Schema**: All 11 tables with full structure
 - **All Vendor Types**: Built-in support for 7 vendors (Vodafone, Tata, Airtel, Indus, Ascend, Sify, BSNL)
 - **All Migrations Applied**: No need to run separate migration files
 - **110+ Invoice Fields**: Complete invoice_data table with all extractable fields
 - **Sample Queries**: Common queries for each table
-- **Default Data**: Validation rules and default templates
+- **Default Data**: Validation rules
 - **Maintenance Queries**: Database cleanup and optimization queries
 
-**Total Tables**: 13
+**Total Tables**: 11
 - Core: upload_batches, pdf_records, invoice_data
-- Templates: field_templates, custom_fields
 - Logs: processing_logs
 - Validation: validation_rules, validation_results
 - Corrections: manual_corrections
@@ -55,7 +54,7 @@ Contains incremental migration files for reference:
 - **MySQL Version**: 8.0+
 - **Character Set**: utf8mb4
 - **Engine**: InnoDB
-- **Root Password**: H!m!l@1498@!!
+- **Root Password**: Ved@1498@!!
 
 ## Quick Start
 

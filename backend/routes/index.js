@@ -1,6 +1,5 @@
 const express = require('express');
 const UploadController = require('../controllers/uploadController');
-const TemplateController = require('../controllers/templateController');
 
 const router = express.Router();
 
@@ -56,44 +55,5 @@ router.post('/batches/:batchId/retry', UploadController.retryBatch);
 
 // Retry single failed file
 router.post('/batches/:batchId/files/:fileId/retry', UploadController.retrySingleFile);
-
-// ===== TEMPLATE ROUTES =====
-
-// Get all templates
-router.get('/templates', TemplateController.getAllTemplates);
-
-// Get template by ID
-router.get('/templates/:templateId', TemplateController.getTemplateById);
-
-// Create new template
-router.post('/templates', TemplateController.createTemplate);
-
-// Update template
-router.put('/templates/:templateId', TemplateController.updateTemplate);
-
-// Delete template
-router.delete('/templates/:templateId', TemplateController.deleteTemplate);
-
-// ===== CUSTOM FIELDS ROUTES =====
-
-// Get custom fields
-router.get('/custom-fields', TemplateController.getCustomFields);
-
-// Create custom field
-router.post('/custom-fields', TemplateController.createCustomField);
-
-// Update custom field
-router.put('/custom-fields/:fieldId', TemplateController.updateCustomField);
-
-// Delete custom field
-router.delete('/custom-fields/:fieldId', TemplateController.deleteCustomField);
-
-// ===== TEMPLATE IMPORT/EXPORT ROUTES =====
-
-// Export template
-router.get('/templates/:templateId/export', TemplateController.exportTemplate);
-
-// Import template
-router.post('/templates/import', TemplateController.importTemplate);
 
 module.exports = router;

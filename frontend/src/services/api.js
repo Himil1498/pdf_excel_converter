@@ -76,33 +76,6 @@ export const uploadAPI = {
   regenerateExcel: (batchId, options = {}) => api.post(`/batches/${batchId}/regenerate-excel`, options),
 };
 
-export const templateAPI = {
-  getTemplates: () => api.get('/templates'),
-
-  getTemplate: (templateId) => api.get(`/templates/${templateId}`),
-
-  createTemplate: (data) => api.post('/templates', data),
-
-  updateTemplate: (templateId, data) => api.put(`/templates/${templateId}`, data),
-
-  deleteTemplate: (templateId) => api.delete(`/templates/${templateId}`),
-
-  getCustomFields: () => api.get('/custom-fields'),
-
-  createCustomField: (data) => api.post('/custom-fields', data),
-
-  updateCustomField: (fieldId, data) => api.put(`/custom-fields/${fieldId}`, data),
-
-  deleteCustomField: (fieldId) => api.delete(`/custom-fields/${fieldId}`),
-
-  exportTemplate: (templateId) => {
-    const url = `${API_BASE_URL}/templates/${templateId}/export`;
-    window.open(url, '_blank');
-  },
-
-  importTemplate: (templateData) => api.post('/templates/import', { templateData }),
-};
-
 // ===== NEW FEATURE APIs =====
 
 // Validation API
