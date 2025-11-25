@@ -2,10 +2,13 @@ const pdfParse = require('pdf-parse');
 const fs = require('fs').promises;
 const { OpenAI } = require('openai');
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Initialize OpenAI client only if API key is provided
+let openai = null;
+if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.trim() !== '') {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+}
 
 class PDFParser {
   /**
@@ -30,6 +33,10 @@ class PDFParser {
    */
   async extractWithAI(pdfText, template = null) {
     try {
+      if (!openai) {
+        throw new Error('OpenAI client not initialized');
+      }
+
       const systemPrompt = `You are an expert at extracting structured data from invoices and bills.
 Extract the following information from the provided invoice text and return it as a JSON object.
 Be precise and extract exact values as they appear in the document.`;
@@ -68,9 +75,9 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
   }
 
   /**
-   * Extract data using regex patterns (fallback method)
+   * Extract data using regex patterns (fallback method) for Vodafone
    */
-  extractWithRegex(text) {
+  extractWithRegexVodafone(text) {
     const patterns = {
       // Invoice details
       invoiceNumber: /Invoice\s*(?:No|Number)?[:.\s]*([A-Z0-9]+)/i,
@@ -167,20 +174,20 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
       const match = text.match(pattern);
       if (key === 'servicePeriod' && match) {
         // Special handling for service period (two dates)
-        extracted.servicePeriodFrom = match[1] ? match[1].trim() : null;
-        extracted.servicePeriodTo = match[2] ? match[2].trim() : null;
+        extracted.servicePeriodFrom = (match[1] && typeof match[1] === 'string') ? match[1].trim() : null;
+        extracted.servicePeriodTo = (match[2] && typeof match[2] === 'string') ? match[2].trim() : null;
       } else if (key === 'reverseCharge') {
         // Boolean field
         extracted[key] = match ? false : null; // "No Tax is payable" means false
       } else if (key === 'vendorEmail' || key === 'vendorPhone' || key === 'vendorChargeablePhone') {
         // Direct values without capture groups
-        if (match) {
-          extracted[key] = match[0] ? match[0].trim() : null;
+        if (match && match[0] && typeof match[0] === 'string') {
+          extracted[key] = match[0].trim();
         } else {
           extracted[key] = null;
         }
       } else {
-        extracted[key] = match ? match[1].trim() : null;
+        extracted[key] = (match && match[1] && typeof match[1] === 'string') ? match[1].trim() : null;
       }
     }
 
@@ -203,12 +210,689 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
   }
 
   /**
+   * Extract data using regex patterns for Tata
+   */
+  extractWithRegexTata(text) {
+    const patterns = {
+      // Invoice details
+      invoiceNumber: /Invoice\s*No[:.\s]*(\d+)/i,
+      billNumber: /Invoice\s*No[:.\s]*(\d+)/i,
+      accountNumber: /Account\s*No[:.\s]*(\d+)/i,
+      billDate: /Bill\s*Date[:.\s]*(\d{2}-[A-Za-z]{3}-\d{2})/i,
+      dueDate: /Due\s*Date[:.\s]*(\d{2}-[A-Za-z]{3}-\d{2}|Pay\s*Immediate)/i,
+
+      // Amounts
+      totalPayable: /Bill\s*Amount[:.\s]*Rs\.?\s*([0-9,]+\.?\d{0,2})/i,
+      currentCharges: /Total\s*Current\s*Charges\s*([0-9,]+\.?\d{0,2})/i,
+      subTotal: /SubTotal\s*([0-9,]+\.?\d{0,2})/i,
+      rentalCharges: /(?:Rental\s*charges|1\)\s*Rental\s*charges)\s*([0-9,]+\.?\d{0,2})/i,
+      usageCharges: /(?:Usage\s*Charges|2\)\s*Usage\s*Charges)\s*([0-9,]+\.?\d{0,2})/i,
+      oneTimeCharges: /(?:One\s*Time\s*Charges|5\)\s*One\s*Time\s*Charges)\s*([0-9,]+\.?\d{0,2})/i,
+      previousBalance: /Previous\s*Balance\s*Rs\.?\s*([0-9,]+\.?\d{0,2})/i,
+
+      // Customer details
+      companyName: /^([A-Z][A-Z\s]+(?:PRIVATE|LIMITED|LTD|PVT)[A-Z\s]*)/m,
+      contactPerson: /Mr\s+([A-Z\s]+)\s*\.\s*\./i,
+      contactNumber: /\((\d{10})\)/,
+      customerPan: /Customer\s*PAN\s*No\s*([A-Z0-9]{10})/i,
+      customerGstin: /Customer\s*GST\s*No\s*([A-Z0-9]{15})/i,
+
+      // Vendor details
+      vendorName: /TATA\s*TELESERVICES/i,
+      vendorGstin: /Tata\s*Teleservices\s*GST\s*No[:.\s]*([A-Z0-9]{15})/i,
+      vendorPan: /Tata\s*Teleservices\s*PAN\s*Number[:.\s]*([A-Z0-9]{10})/i,
+      vendorCin: /CIN[:-]([A-Z0-9]+)/i,
+
+      // Circuit/Service details
+      circuitId: /(?:Circuit\s*ID|CIRCUIT\s*ID)\s*[:.]?\s*(\d+)/i,
+      tataTeleNumber: /Tata\s*Tele\s*Number\s*[:.]?\s*(\d+)/i,
+      poNumber: /(?:Po\s*No|P\.O\.No\.)[:.\s]*([A-Z0-9\/-]+)/i,
+      bandwidth: /Bandwidth\s*[:.]?\s*(\d+)\s*Mbps/i,
+      linkCommissioningDate: /Link\s*Commissioning\s*Date[:.\s]*(\d{2}-[A-Za-z]{3}-\d{2})/i,
+      annualCharges: /(?:Annual\s*Rental\s*charges|ARC\s*-\s*RS\.)\s*([0-9,]+)/i,
+
+      // Service period
+      servicePeriod: /charges\s*from\s*(\d{2}-[A-Za-z]{3}-\d{2})\s*to\s*(\d{2}-[A-Za-z]{3}-\d{2})/i,
+      billPeriod: /Bill\s*Period\s*[:.]?\s*(\w+)/i,
+
+      // Tax details
+      cgst: /Central\s*Goods\s*and\s*Services\s*Tax\s*@\s*([0-9.]+)%/i,
+      sgst: /State\s*Goods\s*and\s*Services\s*Tax\s*@\s*([0-9.]+)%/i,
+      igst: /IGST\s*@\s*([0-9.]+)%/i,
+      cgstAmount: /Central\s*Goods\s*and\s*Services\s*Tax\s*@\s*[0-9.]+%\s*([0-9,]+\.?\d{0,2})/i,
+      sgstAmount: /State\s*Goods\s*and\s*Services\s*Tax\s*@\s*[0-9.]+%\s*([0-9,]+\.?\d{0,2})/i,
+      igstAmount: /IGST\s*@\s*[0-9.]+%\s*([0-9,]+\.?\d{0,2})/i,
+      totalTax: /Goods\s*and\s*Services\s*Tax\s*([0-9,]+\.?\d{0,2})/i,
+
+      // HSN/SAC
+      hsnCode: /HSN\s*Code?\s*[:.]?\s*(\d+)/i,
+
+      // Address details
+      city: /([A-Z]+),\s*(\d{6})/,
+      state: /([A-Z]+)\s*-\s*\d{6}/,
+      pin: /-\s*(\d{6})/,
+      stateCode: /State\s*Code:\s*(\d{2})/i,
+
+      // IRN
+      irn: /IRN\s*[:.]?\s*([a-f0-9]+)/i,
+
+      // Bill plan
+      billPlanName: /Bill\s*Plan\s*Name\s*[:.]?\s*([^\n]+)/i,
+
+      // Credit limit
+      creditLimit: /Credit\s*Limit\s*[:.]?\s*(\d+)/i,
+      securityDeposit: /Security\s*Deposit\s*[:.]?\s*(\d+)/i,
+
+      // Service type
+      serviceType: /Service\s*Type\s*[:.]?\s*([A-Z]+)/i,
+
+      // Product variant
+      productVariant: /Product\s*Variant\s*[:.]?\s*([^\n]+)/i,
+
+      // VAN number
+      vanNumber: /VAN\s*NO\s*[:.]?\s*([A-Z0-9]+)/i,
+    };
+
+    const extracted = {};
+
+    for (const [key, pattern] of Object.entries(patterns)) {
+      const match = text.match(pattern);
+      if (key === 'servicePeriod' && match) {
+        extracted.servicePeriodFrom = (match[1] && typeof match[1] === 'string') ? match[1].trim() : null;
+        extracted.servicePeriodTo = (match[2] && typeof match[2] === 'string') ? match[2].trim() : null;
+      } else if (key === 'city' && match) {
+        extracted[key] = (match[1] && typeof match[1] === 'string') ? match[1].trim() : null;
+      } else {
+        extracted[key] = (match && match[1] && typeof match[1] === 'string') ? match[1].trim() : null;
+      }
+    }
+
+    // Set vendor name default
+    if (!extracted.vendorName) {
+      extracted.vendorName = 'TATA TELESERVICES LTD';
+    }
+
+    // Extract installation address
+    extracted.installationAddress = this.extractTataAddress(text);
+
+    return extracted;
+  }
+
+  /**
+   * Extract address from Tata invoice
+   */
+  extractTataAddress(text) {
+    const addressPattern = /Installation\/\s*Place\s*of\s*Supply:\s*([^\n]+(?:\n[^\n]+)?)/i;
+    const match = text.match(addressPattern);
+    if (match && match[1] && typeof match[1] === 'string') {
+      return match[1].trim().replace(/\s+/g, ' ');
+    }
+    return null;
+  }
+
+  /**
+   * Extract data using regex patterns for Airtel
+   */
+  extractWithRegexAirtel(text) {
+    const airtelTemplate = require('../config/airtelTemplate');
+    const patterns = airtelTemplate.extractionPatterns;
+
+    const extracted = {};
+
+    // Basic Invoice Information
+    extracted.vendorName = airtelTemplate.defaults.vendor_name;
+
+    const billNumberMatch = text.match(patterns.bill_number);
+    extracted.invoiceNumber = extracted.billNumber = billNumberMatch ? billNumberMatch[1].trim() : null;
+
+    const billDateMatch = text.match(patterns.bill_date);
+    extracted.billDate = billDateMatch ? this.formatDate(billDateMatch[1]) : null;
+
+    const dueDateMatch = text.match(patterns.due_date);
+    extracted.dueDate = dueDateMatch ? this.formatDate(dueDateMatch[1]) : null;
+
+    // Financial Information
+    const subtotalMatch = text.match(patterns.subtotal);
+    extracted.subTotal = subtotalMatch ? this.cleanNumeric(subtotalMatch[1]) : null;
+
+    const totalMatch = text.match(patterns.total);
+    extracted.total = extracted.totalPayable = totalMatch ? this.cleanNumeric(totalMatch[1]) : null;
+
+    // GST Information
+    const cgstMatch = text.match(patterns.cgst);
+    extracted.cgst = extracted.cgstAmount = cgstMatch ? this.cleanNumeric(cgstMatch[1]) : null;
+
+    const sgstMatch = text.match(patterns.sgst);
+    extracted.sgst = extracted.sgstAmount = sgstMatch ? this.cleanNumeric(sgstMatch[1]) : null;
+
+    const igstMatch = text.match(patterns.igst);
+    extracted.igst = extracted.igstAmount = igstMatch ? this.cleanNumeric(igstMatch[1]) : null;
+
+    const customerGstinMatch = text.match(patterns.customer_gstin);
+    extracted.customerGstin = customerGstinMatch ? customerGstinMatch[1].trim() : null;
+
+    const hsnSacMatch = text.match(patterns.hsn_sac);
+    extracted.hsnSac = hsnSacMatch ? hsnSacMatch[1].trim() : null;
+
+    const placeOfSupplyMatch = text.match(patterns.place_of_supply);
+    extracted.sourceOfSupply = extracted.destinationOfSupply = placeOfSupplyMatch ? placeOfSupplyMatch[1].trim() : 'India';
+
+    const accountNumberMatch = text.match(patterns.account_number);
+    extracted.accountNumber = extracted.relationshipNumber = accountNumberMatch ? accountNumberMatch[1].trim() : null;
+
+    const internalIdMatch = text.match(patterns.internal_id);
+    extracted.billId = internalIdMatch ? internalIdMatch[1].trim() : null;
+
+    // Default Values
+    extracted.currencyCode = airtelTemplate.defaults.currency_code;
+    extracted.exchangeRate = airtelTemplate.defaults.exchange_rate;
+    extracted.paymentTerms = airtelTemplate.defaults.payment_terms;
+    extracted.paymentTermsLabel = airtelTemplate.defaults.payment_terms_label;
+
+    // Additional standard fields
+    extracted.quantity = 1;
+    extracted.usageUnit = 'Month';
+    extracted.itemType = 'Service';
+    extracted.sourceOfSupply = 'India';
+    extracted.destinationOfSupply = 'India';
+
+    // Calculate tax rates if amounts are available
+    if (extracted.subTotal && extracted.cgst) {
+      extracted.cgstRate = ((extracted.cgst / extracted.subTotal) * 100).toFixed(2);
+    }
+    if (extracted.subTotal && extracted.sgst) {
+      extracted.sgstRate = ((extracted.sgst / extracted.subTotal) * 100).toFixed(2);
+    }
+    if (extracted.subTotal && extracted.igst) {
+      extracted.igstRate = ((extracted.igst / extracted.subTotal) * 100).toFixed(2);
+    }
+
+    return extracted;
+  }
+
+  /**
+   * Extract data using regex patterns for Indus Towers
+   */
+  extractWithRegexIndus(text) {
+    const indusTemplate = require('../config/indusTemplate');
+    const patterns = indusTemplate.extractionPatterns;
+
+    const extracted = {};
+
+    // Basic Invoice Information
+    extracted.vendorName = indusTemplate.defaults.vendor_name;
+
+    const invoiceNumberMatch = text.match(patterns.invoice_number);
+    extracted.invoiceNumber = extracted.billNumber = invoiceNumberMatch ? invoiceNumberMatch[1].trim() : null;
+
+    const invoiceDateMatch = text.match(patterns.invoice_date);
+    extracted.billDate = invoiceDateMatch ? this.formatDate(invoiceDateMatch[1]) : null;
+
+    // Circle and State
+    const circleMatch = text.match(patterns.circle);
+    extracted.circle = circleMatch ? circleMatch[1].trim() : null;
+
+    const stateMatch = text.match(patterns.state);
+    extracted.state = extracted.sourceOfSupply = extracted.destinationOfSupply = stateMatch ? stateMatch[1].trim() : null;
+
+    // Financial Information
+    const amountMatch = text.match(patterns.amount);
+    extracted.subTotal = extracted.total = extracted.totalPayable = amountMatch ? this.cleanNumeric(amountMatch[1]) : null;
+
+    const totalMatch = text.match(patterns.total);
+    if (totalMatch) {
+      extracted.total = extracted.totalPayable = this.cleanNumeric(totalMatch[1]);
+    }
+
+    // HSN/SAC Code
+    const hsnMatch = text.match(patterns.hsn_code);
+    extracted.hsnSac = hsnMatch ? hsnMatch[1].trim() : null;
+
+    // Description
+    const descMatch = text.match(patterns.description);
+    extracted.description = extracted.itemName = descMatch ? descMatch[1].trim() : null;
+
+    // GSTIN - Customer (first occurrence)
+    const customerGstinMatch = text.match(patterns.customer_gstin_label);
+    extracted.customerGstin = customerGstinMatch ? customerGstinMatch[1].trim() : null;
+
+    // PAN Number
+    const panMatch = text.match(patterns.pan);
+    extracted.pan = panMatch ? panMatch[1].trim() : null;
+
+    // CIN Number
+    const cinMatch = text.match(patterns.cin);
+    extracted.cin = extracted.billId = cinMatch ? cinMatch[1].trim() : null;
+
+    // Account Number
+    const accountMatch = text.match(patterns.account_number);
+    extracted.accountNumber = accountMatch ? accountMatch[1].trim() : null;
+
+    // IFSC Code
+    const ifscMatch = text.match(patterns.ifsc);
+    extracted.ifscCode = ifscMatch ? ifscMatch[1].trim() : null;
+
+    // GST Amounts
+    const cgstMatch = text.match(patterns.cgst);
+    extracted.cgst = extracted.cgstAmount = cgstMatch ? this.cleanNumeric(cgstMatch[1]) : null;
+
+    const sgstMatch = text.match(patterns.sgst);
+    extracted.sgst = extracted.sgstAmount = sgstMatch ? this.cleanNumeric(sgstMatch[1]) : null;
+
+    const igstMatch = text.match(patterns.igst);
+    extracted.igst = extracted.igstAmount = igstMatch ? this.cleanNumeric(igstMatch[1]) : null;
+
+    // GST Rates
+    const cgstRateMatch = text.match(patterns.cgst_rate);
+    extracted.cgstRate = cgstRateMatch ? parseFloat(cgstRateMatch[1]) : null;
+
+    const sgstRateMatch = text.match(patterns.sgst_rate);
+    extracted.sgstRate = sgstRateMatch ? parseFloat(sgstRateMatch[1]) : null;
+
+    const igstRateMatch = text.match(patterns.igst_rate);
+    extracted.igstRate = igstRateMatch ? parseFloat(igstRateMatch[1]) : null;
+
+    // Vendor GSTIN (different from customer)
+    const vendorGstinMatch = text.match(patterns.vendor_gstin);
+    extracted.vendorGSTIN = vendorGstinMatch ? vendorGstinMatch[1].trim() : null;
+
+    // Default Values
+    extracted.currencyCode = indusTemplate.defaults.currency_code;
+    extracted.exchangeRate = indusTemplate.defaults.exchange_rate;
+    extracted.paymentTerms = indusTemplate.defaults.payment_terms;
+    extracted.paymentTermsLabel = indusTemplate.defaults.payment_terms_label;
+
+    // Additional standard fields
+    extracted.quantity = 1;
+    extracted.usageUnit = 'Month';
+    extracted.itemType = 'Service';
+
+    return extracted;
+  }
+
+  /**
+   * Extract data using regex patterns for Ascend
+   */
+  extractWithRegexAscend(text) {
+    const ascendTemplate = require('../config/ascendTemplate');
+    const patterns = ascendTemplate.extractionPatterns;
+
+    const extracted = {};
+
+    // Basic Invoice Information
+    extracted.vendorName = ascendTemplate.defaults.vendor_name;
+
+    const billNumberMatch = text.match(patterns.bill_number);
+    extracted.invoiceNumber = extracted.billNumber = billNumberMatch ? billNumberMatch[1].trim() : null;
+
+    const billDateMatch = text.match(patterns.bill_date);
+    extracted.billDate = billDateMatch ? this.formatDate(billDateMatch[1]) : null;
+
+    const dueDateMatch = text.match(patterns.due_date);
+    extracted.dueDate = dueDateMatch ? this.formatDate(dueDateMatch[1]) : null;
+
+    // Bill Period
+    const billPeriodFromMatch = text.match(patterns.bill_period_from);
+    extracted.billPeriodFrom = billPeriodFromMatch ? this.formatDate(billPeriodFromMatch[1]) : null;
+
+    const billPeriodToMatch = text.match(patterns.bill_period_to);
+    extracted.billPeriodTo = billPeriodToMatch ? this.formatDate(billPeriodToMatch[1]) : null;
+
+    // Financial Information
+    const subtotalMatch = text.match(patterns.subtotal);
+    extracted.subTotal = subtotalMatch ? this.cleanNumeric(subtotalMatch[1]) : null;
+
+    const totalMatch = text.match(patterns.total);
+    extracted.total = extracted.totalPayable = totalMatch ? this.cleanNumeric(totalMatch[1]) : null;
+
+    // GST Information
+    const cgstMatch = text.match(patterns.cgst);
+    extracted.cgst = extracted.cgstAmount = cgstMatch ? this.cleanNumeric(cgstMatch[1]) : null;
+
+    const sgstMatch = text.match(patterns.sgst);
+    extracted.sgst = extracted.sgstAmount = sgstMatch ? this.cleanNumeric(sgstMatch[1]) : null;
+
+    const igstMatch = text.match(patterns.igst);
+    extracted.igst = extracted.igstAmount = igstMatch ? this.cleanNumeric(igstMatch[1]) : null;
+
+    // GST Rates
+    const cgstRateMatch = text.match(patterns.cgst_rate);
+    extracted.cgstRate = cgstRateMatch ? parseFloat(cgstRateMatch[1]) : null;
+
+    const sgstRateMatch = text.match(patterns.sgst_rate);
+    extracted.sgstRate = sgstRateMatch ? parseFloat(sgstRateMatch[1]) : null;
+
+    const igstRateMatch = text.match(patterns.igst_rate);
+    extracted.igstRate = igstRateMatch ? parseFloat(igstRateMatch[1]) : null;
+
+    // Tax Amount
+    const taxAmountMatch = text.match(patterns.tax_amount);
+    extracted.taxAmount = taxAmountMatch ? this.cleanNumeric(taxAmountMatch[1]) : null;
+
+    // GSTIN Information
+    const gstinMatch = text.match(patterns.gstin);
+    extracted.vendorGSTIN = gstinMatch ? gstinMatch[1].trim() : null;
+
+    const customerGstinMatch = text.match(patterns.customer_gstin);
+    extracted.customerGstin = customerGstinMatch ? customerGstinMatch[1].trim() : null;
+
+    // PAN
+    const panMatch = text.match(patterns.pan);
+    extracted.pan = panMatch ? panMatch[1].trim() : null;
+
+    // Place of Supply
+    const placeOfSupplyMatch = text.match(patterns.place_of_supply);
+    if (placeOfSupplyMatch) {
+      extracted.sourceOfSupply = extracted.destinationOfSupply = placeOfSupplyMatch[2] ? placeOfSupplyMatch[2].trim() : null;
+    }
+
+    // HSN/SAC
+    const hsnSacMatch = text.match(patterns.hsn_sac);
+    extracted.hsnSac = hsnSacMatch ? hsnSacMatch[1].trim() : null;
+
+    // Description
+    const descriptionMatch = text.match(patterns.description);
+    extracted.description = extracted.itemName = descriptionMatch ? descriptionMatch[1].trim() : ascendTemplate.defaults.item_name;
+
+    // IRN
+    const irnMatch = text.match(patterns.irn);
+    extracted.irn = irnMatch ? irnMatch[1].trim() : null;
+
+    // Bank Details
+    const accountNumberMatch = text.match(patterns.account_number);
+    extracted.accountNumber = accountNumberMatch ? accountNumberMatch[1].trim() : null;
+
+    const ifscMatch = text.match(patterns.ifsc);
+    extracted.ifscCode = ifscMatch ? ifscMatch[1].trim() : null;
+
+    // Default Values
+    extracted.currencyCode = ascendTemplate.defaults.currency_code;
+    extracted.exchangeRate = ascendTemplate.defaults.exchange_rate;
+    extracted.paymentTerms = ascendTemplate.defaults.payment_terms;
+    extracted.paymentTermsLabel = ascendTemplate.defaults.payment_terms_label;
+
+    // Additional standard fields
+    extracted.quantity = ascendTemplate.defaults.quantity;
+    extracted.usageUnit = ascendTemplate.defaults.usage_unit;
+    extracted.itemType = 'Service';
+    extracted.account = ascendTemplate.defaults.account;
+
+    // Calculate tax rates if not found but amounts are available
+    if (!extracted.cgstRate && extracted.subTotal && extracted.cgst) {
+      extracted.cgstRate = ((extracted.cgst / extracted.subTotal) * 100).toFixed(2);
+    }
+    if (!extracted.sgstRate && extracted.subTotal && extracted.sgst) {
+      extracted.sgstRate = ((extracted.sgst / extracted.subTotal) * 100).toFixed(2);
+    }
+    if (!extracted.igstRate && extracted.subTotal && extracted.igst) {
+      extracted.igstRate = ((extracted.igst / extracted.subTotal) * 100).toFixed(2);
+    }
+
+    // Calculate tax amount if not found
+    if (!extracted.taxAmount && (extracted.cgst || extracted.sgst || extracted.igst)) {
+      extracted.taxAmount = (extracted.cgst || 0) + (extracted.sgst || 0) + (extracted.igst || 0);
+    }
+
+    return extracted;
+  }
+
+  /**
+   * Extract data using regex patterns for Sify
+   */
+  extractWithRegexSify(text) {
+    const sifyTemplate = require('../config/sifyTemplate');
+    const patterns = sifyTemplate.extractionPatterns;
+
+    const extracted = {};
+
+    // Basic Invoice Information
+    extracted.vendorName = sifyTemplate.defaults.vendor_name;
+
+    const billNumberMatch = text.match(patterns.bill_number);
+    extracted.invoiceNumber = extracted.billNumber = billNumberMatch ? billNumberMatch[1].trim() : null;
+
+    const billDateMatch = text.match(patterns.bill_date);
+    extracted.billDate = billDateMatch ? this.formatDate(billDateMatch[1]) : null;
+
+    const dueDateMatch = text.match(patterns.due_date);
+    extracted.dueDate = dueDateMatch ? this.formatDate(dueDateMatch[1]) : null;
+
+    // Financial Information
+    const subtotalMatch = text.match(patterns.subtotal);
+    extracted.subTotal = subtotalMatch ? this.cleanNumeric(subtotalMatch[1]) : null;
+
+    const totalMatch = text.match(patterns.total);
+    extracted.total = extracted.totalPayable = totalMatch ? this.cleanNumeric(totalMatch[1]) : null;
+
+    const taxAmountMatch = text.match(patterns.tax_amount);
+    extracted.taxAmount = taxAmountMatch ? this.cleanNumeric(taxAmountMatch[1]) : null;
+
+    // GST Information
+    const cgstMatch = text.match(patterns.cgst);
+    if (cgstMatch) {
+      extracted.cgst = extracted.cgstAmount = this.cleanNumeric(cgstMatch[2] || cgstMatch[1]);
+    }
+
+    const sgstMatch = text.match(patterns.sgst);
+    if (sgstMatch) {
+      extracted.sgst = extracted.sgstAmount = this.cleanNumeric(sgstMatch[2] || sgstMatch[1]);
+    }
+
+    const igstMatch = text.match(patterns.igst);
+    if (igstMatch) {
+      extracted.igst = extracted.igstAmount = this.cleanNumeric(igstMatch[2] || igstMatch[1]);
+    }
+
+    // GST Rates
+    const cgstRateMatch = text.match(patterns.cgst_rate);
+    extracted.cgstRate = cgstRateMatch ? parseFloat(cgstRateMatch[1]) : null;
+
+    const sgstRateMatch = text.match(patterns.sgst_rate);
+    extracted.sgstRate = sgstRateMatch ? parseFloat(sgstRateMatch[1]) : null;
+
+    const igstRateMatch = text.match(patterns.igst_rate);
+    extracted.igstRate = igstRateMatch ? parseFloat(igstRateMatch[1]) : null;
+
+    // GSTIN Information
+    const gstinMatches = text.match(new RegExp(patterns.gstin.source, 'gi'));
+    if (gstinMatches && gstinMatches.length > 0) {
+      extracted.vendorGSTIN = gstinMatches[0].replace(/GSTIN\s*:\s*/i, '').trim();
+      if (gstinMatches.length > 1) {
+        extracted.customerGstin = gstinMatches[1].replace(/GSTIN\s*:\s*/i, '').trim();
+      }
+    }
+
+    // PAN
+    const panMatch = text.match(patterns.pan);
+    extracted.pan = panMatch ? panMatch[1].trim() : null;
+
+    // Place of Supply
+    const placeOfSupplyMatch = text.match(patterns.place_of_supply);
+    extracted.sourceOfSupply = extracted.destinationOfSupply = placeOfSupplyMatch ? placeOfSupplyMatch[1].trim() : 'India';
+
+    // State Code
+    const stateCodeMatch = text.match(patterns.state_code);
+    extracted.stateCode = stateCodeMatch ? stateCodeMatch[1].trim() : null;
+
+    // Customer Code
+    const customerCodeMatch = text.match(patterns.customer_code);
+    extracted.customerCode = customerCodeMatch ? customerCodeMatch[1].trim() : null;
+
+    // PO Number
+    const poNumberMatch = text.match(patterns.po_number);
+    extracted.poNumber = extracted.purchaseOrder = poNumberMatch ? poNumberMatch[1].trim() : null;
+
+    // Currency
+    const currencyMatch = text.match(patterns.currency);
+    extracted.currencyCode = currencyMatch ? currencyMatch[1].trim() : sifyTemplate.defaults.currency_code;
+
+    // CIN
+    const cinMatch = text.match(patterns.cin);
+    extracted.cin = extracted.billId = cinMatch ? cinMatch[1].trim() : null;
+
+    // LUT Number
+    const lutMatch = text.match(patterns.lut_number);
+    extracted.lutNumber = lutMatch ? lutMatch[1].trim() : null;
+
+    // Default Values
+    extracted.exchangeRate = sifyTemplate.defaults.exchange_rate;
+    extracted.paymentTerms = sifyTemplate.defaults.payment_terms;
+    extracted.paymentTermsLabel = sifyTemplate.defaults.payment_terms_label;
+
+    // Additional standard fields
+    extracted.quantity = sifyTemplate.defaults.quantity;
+    extracted.usageUnit = sifyTemplate.defaults.usage_unit;
+    extracted.itemType = sifyTemplate.defaults.item_type;
+
+    return extracted;
+  }
+
+  /**
+   * Extract data using regex patterns for BSNL
+   */
+  extractWithRegexBsnl(text) {
+    const bsnlTemplate = require('../config/bsnlTemplate');
+    const patterns = bsnlTemplate.extractionPatterns;
+
+    const extracted = {};
+
+    // Basic Invoice Information
+    extracted.vendorName = bsnlTemplate.defaults.vendor_name;
+
+    const billNumberMatch = text.match(patterns.bill_number);
+    extracted.invoiceNumber = extracted.billNumber = billNumberMatch ? billNumberMatch[1].trim() : null;
+
+    const billDateMatch = text.match(patterns.bill_date);
+    extracted.billDate = billDateMatch ? this.formatDate(billDateMatch[1]) : null;
+
+    const dueDateMatch = text.match(patterns.due_date);
+    extracted.dueDate = dueDateMatch ? this.formatDate(dueDateMatch[1]) : null;
+
+    // Account and Phone
+    const accountNumberMatch = text.match(patterns.account_number);
+    extracted.accountNumber = extracted.relationshipNumber = accountNumberMatch ? accountNumberMatch[1].trim() : null;
+
+    const phoneNumberMatch = text.match(patterns.phone_number);
+    extracted.phoneNumber = phoneNumberMatch ? phoneNumberMatch[1].trim() : null;
+
+    // Bill Period
+    const billPeriodFromMatch = text.match(patterns.bill_period_from);
+    extracted.billPeriodFrom = billPeriodFromMatch ? this.formatDate(billPeriodFromMatch[1]) : null;
+
+    const billPeriodToMatch = text.match(patterns.bill_period_to);
+    extracted.billPeriodTo = billPeriodToMatch ? this.formatDate(billPeriodToMatch[1]) : null;
+
+    // Financial Information
+    const totalMatch = text.match(patterns.total);
+    extracted.total = extracted.totalPayable = totalMatch ? this.cleanNumeric(totalMatch[1]) : null;
+
+    const subtotalMatch = text.match(patterns.subtotal);
+    extracted.subTotal = subtotalMatch ? this.cleanNumeric(subtotalMatch[1]) : null;
+
+    const taxAmountMatch = text.match(patterns.tax_amount);
+    extracted.taxAmount = taxAmountMatch ? this.cleanNumeric(taxAmountMatch[1]) : null;
+
+    // GST Information
+    const cgstMatch = text.match(patterns.cgst);
+    if (cgstMatch) {
+      extracted.cgstRate = parseFloat(cgstMatch[1]);
+      extracted.cgst = extracted.cgstAmount = this.cleanNumeric(cgstMatch[2]);
+    }
+
+    const sgstMatch = text.match(patterns.sgst);
+    if (sgstMatch) {
+      extracted.sgstRate = parseFloat(sgstMatch[1]);
+      extracted.sgst = extracted.sgstAmount = this.cleanNumeric(sgstMatch[2]);
+    }
+
+    const igstMatch = text.match(patterns.igst);
+    if (igstMatch) {
+      extracted.igstRate = parseFloat(igstMatch[1]);
+      extracted.igst = extracted.igstAmount = this.cleanNumeric(igstMatch[2]);
+    }
+
+    // GSTIN
+    const gstinMatch = text.match(patterns.gstin);
+    extracted.customerGstin = gstinMatch ? gstinMatch[1].trim() : null;
+
+    // Tariff Plan
+    const tariffPlanMatch = text.match(patterns.tariff_plan);
+    extracted.tariffPlan = extracted.itemName = tariffPlanMatch ? tariffPlanMatch[1].trim() : bsnlTemplate.defaults.item_name;
+
+    // Charges breakdown
+    const recurringChargesMatch = text.match(patterns.recurring_charges);
+    extracted.recurringCharges = recurringChargesMatch ? this.cleanNumeric(recurringChargesMatch[1]) : null;
+
+    const usageChargesMatch = text.match(patterns.usage_charges);
+    extracted.usageCharges = usageChargesMatch ? this.cleanNumeric(usageChargesMatch[1]) : null;
+
+    const oneTimeChargesMatch = text.match(patterns.one_time_charges);
+    extracted.oneTimeCharges = oneTimeChargesMatch ? this.cleanNumeric(oneTimeChargesMatch[1]) : null;
+
+    const discountMatch = text.match(patterns.discount);
+    extracted.discount = discountMatch ? this.cleanNumeric(discountMatch[1]) : null;
+
+    // Account Summary
+    const previousBalanceMatch = text.match(patterns.previous_balance);
+    extracted.previousBalance = previousBalanceMatch ? this.cleanNumeric(previousBalanceMatch[1]) : null;
+
+    const paymentReceivedMatch = text.match(patterns.payment_received);
+    extracted.paymentReceived = paymentReceivedMatch ? this.cleanNumeric(paymentReceivedMatch[1]) : null;
+
+    const adjustmentsMatch = text.match(patterns.adjustments);
+    extracted.adjustments = adjustmentsMatch ? this.cleanNumeric(adjustmentsMatch[1]) : null;
+
+    const currentChargesMatch = text.match(patterns.current_charges);
+    extracted.currentCharges = currentChargesMatch ? this.cleanNumeric(currentChargesMatch[1]) : null;
+
+    // Calculate subtotal if not found
+    if (!extracted.subTotal && extracted.recurringCharges !== null) {
+      extracted.subTotal = extracted.recurringCharges + (extracted.usageCharges || 0) + (extracted.oneTimeCharges || 0);
+    }
+
+    // Default Values
+    extracted.currencyCode = bsnlTemplate.defaults.currency_code;
+    extracted.exchangeRate = bsnlTemplate.defaults.exchange_rate;
+    extracted.paymentTerms = bsnlTemplate.defaults.payment_terms;
+    extracted.paymentTermsLabel = bsnlTemplate.defaults.payment_terms_label;
+
+    // Additional standard fields
+    extracted.quantity = bsnlTemplate.defaults.quantity;
+    extracted.usageUnit = bsnlTemplate.defaults.usage_unit;
+    extracted.itemType = bsnlTemplate.defaults.item_type;
+    extracted.sourceOfSupply = extracted.destinationOfSupply = 'India';
+
+    return extracted;
+  }
+
+  /**
+   * Main regex extraction method that delegates to vendor-specific extractors
+   */
+  extractWithRegex(text, vendorType = 'vodafone') {
+    if (vendorType === 'tata') {
+      return this.extractWithRegexTata(text);
+    } else if (vendorType === 'airtel') {
+      return this.extractWithRegexAirtel(text);
+    } else if (vendorType === 'indus') {
+      return this.extractWithRegexIndus(text);
+    } else if (vendorType === 'ascend') {
+      return this.extractWithRegexAscend(text);
+    } else if (vendorType === 'sify') {
+      return this.extractWithRegexSify(text);
+    } else if (vendorType === 'bsnl') {
+      return this.extractWithRegexBsnl(text);
+    } else {
+      return this.extractWithRegexVodafone(text);
+    }
+  }
+
+  /**
    * Extract address from text
    */
   extractAddress(text, label) {
     const addressPattern = new RegExp(`${label}\\s*[:.]?([^]+?)(?=Bill To|Ship To|City:|Description|$)`, 'i');
     const match = text.match(addressPattern);
-    if (match) {
+    if (match && match[1] && typeof match[1] === 'string') {
       return match[1].trim().replace(/\s+/g, ' ');
     }
     return null;
@@ -232,7 +916,7 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
       if (config.pattern) {
         const regex = new RegExp(config.pattern, 'i');
         const match = pdfText.match(regex);
-        extractedData[fieldName] = match ? match[1].trim() : null;
+        extractedData[fieldName] = (match && match[1] && typeof match[1] === 'string') ? match[1].trim() : null;
       }
     }
 
@@ -245,17 +929,49 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
   formatDate(dateStr) {
     if (!dateStr) return null;
 
-    // Handle DD.MM.YY format
-    const match1 = dateStr.match(/(\d{2})\.(\d{2})\.(\d{2})$/);
+    // Handle "Pay Immediate" or special values
+    if (dateStr.toLowerCase().includes('pay immediate') || dateStr.toLowerCase().includes('immediate')) {
+      return null; // Or keep as is if needed
+    }
+
+    const monthMap = {
+      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+      'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
+      'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+    };
+
+    // Handle DD-MMM-YYYY format (Airtel: 07-MAY-2025)
+    const match1 = dateStr.match(/(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
     if (match1) {
-      const year = parseInt(match1[3]) > 50 ? `19${match1[3]}` : `20${match1[3]}`;
-      return `${year}-${match1[2]}-${match1[1]}`;
+      const month = monthMap[match1[2].toLowerCase()];
+      return `${match1[3]}-${month}-${match1[1].padStart(2, '0')}`;
+    }
+
+    // Handle DD-MMM-YY format (Tata: 03-Nov-25)
+    const match2 = dateStr.match(/(\d{2})-([A-Za-z]{3})-(\d{2})/);
+    if (match2) {
+      const month = monthMap[match2[2].toLowerCase()];
+      const year = parseInt(match2[3]) > 50 ? `19${match2[3]}` : `20${match2[3]}`;
+      return `${year}-${month}-${match2[1]}`;
+    }
+
+    // Handle DD.MM.YY format (Vodafone)
+    const match3 = dateStr.match(/(\d{2})\.(\d{2})\.(\d{2})$/);
+    if (match3) {
+      const year = parseInt(match3[3]) > 50 ? `19${match3[3]}` : `20${match3[3]}`;
+      return `${year}-${match3[2]}-${match3[1]}`;
     }
 
     // Handle DD.MM.YYYY format
-    const match2 = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-    if (match2) {
-      return `${match2[3]}-${match2[2]}-${match2[1]}`;
+    const match4 = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if (match4) {
+      return `${match4[3]}-${match4[2]}-${match4[1]}`;
+    }
+
+    // Handle DD/MM/YYYY format (Indus: 29/10/2025)
+    const match5 = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (match5) {
+      return `${match5[3]}-${match5[2]}-${match5[1]}`;
     }
 
     return dateStr;
@@ -272,7 +988,7 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
   /**
    * Main extraction method
    */
-  async extractInvoiceData(filePath, template = null, useAI = true) {
+  async extractInvoiceData(filePath, template = null, useAI = true, vendorType = 'vodafone') {
     const startTime = Date.now();
 
     try {
@@ -281,20 +997,20 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
 
       let extractedData;
 
-      // Try AI extraction first if enabled
-      if (useAI && process.env.OPENAI_API_KEY) {
+      // Try AI extraction first if enabled and available
+      if (useAI && openai) {
         try {
           extractedData = await this.extractWithAI(text, template);
         } catch (aiError) {
           console.warn('AI extraction failed, falling back to regex:', aiError.message);
           extractedData = template
             ? await this.parseWithTemplate(text, template)
-            : this.extractWithRegex(text);
+            : this.extractWithRegex(text, vendorType);
         }
       } else if (template) {
         extractedData = await this.parseWithTemplate(text, template);
       } else {
-        extractedData = this.extractWithRegex(text);
+        extractedData = this.extractWithRegex(text, vendorType);
       }
 
       // Format dates
@@ -323,13 +1039,17 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
 
       const processingTime = Date.now() - startTime;
 
+      // Add vendor type to extracted data
+      extractedData.vendorType = vendorType;
+
       return {
         success: true,
         data: extractedData,
         metadata: {
           pages,
           processingTime,
-          extractionMethod: useAI ? 'AI' : (template ? 'Template' : 'Regex')
+          extractionMethod: useAI ? 'AI' : (template ? 'Template' : 'Regex'),
+          vendorType
         }
       };
 

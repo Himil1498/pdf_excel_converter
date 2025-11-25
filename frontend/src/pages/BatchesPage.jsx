@@ -16,6 +16,7 @@ const BatchesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, limit: 20, offset: 0, hasMore: false });
   const itemsPerPage = 20;
+  const [selectedBatches, setSelectedBatches] = useState([]);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: '',
@@ -73,10 +74,52 @@ const BatchesPage = () => {
         try {
           await uploadAPI.deleteBatch(batchId);
           toast.success('Batch deleted successfully');
+          setSelectedBatches(prev => prev.filter(id => id !== batchId));
           loadBatches();
         } catch (error) {
           toast.error('Failed to delete batch');
         }
+      }
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedBatches.length === 0) {
+      toast.error('No batches selected');
+      return;
+    }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Multiple Batches',
+      message: `Are you sure you want to delete ${selectedBatches.length} batch(es)? This will delete all associated files and data. This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await uploadAPI.bulkDeleteBatches(selectedBatches);
+          toast.success(`${selectedBatches.length} batch(es) deleted successfully`);
+          setSelectedBatches([]);
+          loadBatches();
+        } catch (error) {
+          toast.error('Failed to delete batches');
+        }
+      }
+    });
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedBatches(batches.map(b => b.id));
+    } else {
+      setSelectedBatches([]);
+    }
+  };
+
+  const handleSelectBatch = (batchId) => {
+    setSelectedBatches(prev => {
+      if (prev.includes(batchId)) {
+        return prev.filter(id => id !== batchId);
+      } else {
+        return [...prev, batchId];
       }
     });
   };
@@ -146,17 +189,34 @@ const BatchesPage = () => {
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Processing Batches</h2>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
             View and manage your PDF processing batches ({pagination?.total || 0} total)
+            {selectedBatches.length > 0 && (
+              <span className="ml-2 text-blue-600 dark:text-blue-400">
+                • {selectedBatches.length} selected
+              </span>
+            )}
           </p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg
-                   hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 text-gray-700 dark:text-gray-200"
-        >
-          <RefreshCw className={`h-5 w-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex gap-3">
+          {selectedBatches.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg
+                       hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="h-5 w-5 mr-2" />
+              Delete Selected ({selectedBatches.length})
+            </button>
+          )}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg
+                     hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 text-gray-700 dark:text-gray-200"
+          >
+            <RefreshCw className={`h-5 w-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -216,6 +276,14 @@ const BatchesPage = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <th className="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedBatches.length === batches.length && batches.length > 0}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                  />
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Batch Name
                 </th>
@@ -242,6 +310,14 @@ const BatchesPage = () => {
 
                 return (
                   <tr key={batch.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedBatches.includes(batch.id)}
+                        onChange={() => handleSelectBatch(batch.id)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {batch.batch_name || 'Unnamed Batch'}

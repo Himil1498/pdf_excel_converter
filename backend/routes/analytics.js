@@ -7,7 +7,8 @@ const analyticsService = require('../services/analyticsService');
  */
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await analyticsService.getDashboardStats();
+    const { vendorType } = req.query;
+    const stats = await analyticsService.getDashboardStats(vendorType);
     res.json(stats);
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -57,7 +58,8 @@ router.get('/circuits', async (req, res) => {
  */
 router.get('/vendors', async (req, res) => {
   try {
-    const comparison = await analyticsService.getVendorComparison();
+    const { vendorType } = req.query;
+    const comparison = await analyticsService.getVendorComparison(vendorType);
     res.json(comparison);
   } catch (error) {
     console.error('Error fetching vendor comparison:', error);
@@ -70,9 +72,10 @@ router.get('/vendors', async (req, res) => {
  */
 router.get('/trends', async (req, res) => {
   try {
-    const { months } = req.query;
+    const { months, vendorType } = req.query;
     const trends = await analyticsService.getMonthlyTrend(
-      months ? parseInt(months) : 12
+      months ? parseInt(months) : 12,
+      vendorType
     );
     res.json(trends);
   } catch (error) {
@@ -86,7 +89,8 @@ router.get('/trends', async (req, res) => {
  */
 router.get('/bandwidth', async (req, res) => {
   try {
-    const data = await analyticsService.getCostByBandwidth();
+    const { vendorType } = req.query;
+    const data = await analyticsService.getCostByBandwidth(vendorType);
     res.json(data);
   } catch (error) {
     console.error('Error fetching bandwidth costs:', error);
@@ -99,9 +103,10 @@ router.get('/bandwidth', async (req, res) => {
  */
 router.get('/top-spending', async (req, res) => {
   try {
-    const { limit } = req.query;
+    const { limit, vendorType } = req.query;
     const circuits = await analyticsService.getTopSpendingCircuits(
-      limit ? parseInt(limit) : 10
+      limit ? parseInt(limit) : 10,
+      vendorType
     );
     res.json(circuits);
   } catch (error) {
@@ -119,9 +124,10 @@ router.get('/top-spending', async (req, res) => {
  */
 router.get('/payment-due', async (req, res) => {
   try {
-    const { days } = req.query;
+    const { days, vendorType } = req.query;
     const invoices = await analyticsService.getPaymentDueInvoices(
-      days ? parseInt(days) : 7
+      days ? parseInt(days) : 7,
+      vendorType
     );
     res.json(invoices);
   } catch (error) {

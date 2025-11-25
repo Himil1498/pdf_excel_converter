@@ -33,10 +33,14 @@ const TemplatesPage = () => {
         templateAPI.getCustomFields()
       ]);
 
-      if (templatesRes.success) setTemplates(templatesRes.data);
-      if (fieldsRes.success) setCustomFields(fieldsRes.data);
+      // API returns { success: true, data: [...] }
+      setTemplates(templatesRes?.data || []);
+      setCustomFields(fieldsRes?.data || []);
     } catch (error) {
-      toast.error("Failed to load data");
+      console.error("Error loading templates:", error);
+      toast.error("Failed to load templates");
+      setTemplates([]);
+      setCustomFields([]);
     } finally {
       setLoading(false);
     }

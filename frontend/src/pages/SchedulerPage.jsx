@@ -22,6 +22,8 @@ export default function SchedulerPage() {
     batch_name_prefix: "",
     is_active: true
   });
+  const [customCron, setCustomCron] = useState(false);
+  const [cronTime, setCronTime] = useState({ hour: "0", minute: "0", day: "*", month: "*", weekday: "*" });
   const [loading, setLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
@@ -57,6 +59,8 @@ export default function SchedulerPage() {
       await schedulerAPI.createJob(newJob);
       toast.success("Scheduled job created successfully");
       setShowCreateModal(false);
+      setCustomCron(false);
+      setCronTime({ hour: "0", minute: "0", day: "*", month: "*", weekday: "*" });
       setNewJob({
         job_name: "",
         cron_schedule: "0 0 * * *",
@@ -120,8 +124,29 @@ export default function SchedulerPage() {
     { label: "Daily at midnight", value: "0 0 * * *" },
     { label: "Daily at 9 AM", value: "0 9 * * *" },
     { label: "Weekly on Monday", value: "0 0 * * 1" },
-    { label: "Monthly on 1st", value: "0 0 1 * *" }
+    { label: "Monthly on 1st", value: "0 0 1 * *" },
+    { label: "Custom", value: "custom" }
   ];
+
+  const handleCronScheduleChange = (value) => {
+    if (value === "custom") {
+      setCustomCron(true);
+      // Build cron from current cronTime state
+      const cron = `${cronTime.minute} ${cronTime.hour} ${cronTime.day} ${cronTime.month} ${cronTime.weekday}`;
+      setNewJob({ ...newJob, cron_schedule: cron });
+    } else {
+      setCustomCron(false);
+      setNewJob({ ...newJob, cron_schedule: value });
+    }
+  };
+
+  const handleCronTimeChange = (field, value) => {
+    const updated = { ...cronTime, [field]: value };
+    setCronTime(updated);
+    // Update the cron schedule
+    const cron = `${updated.minute} ${updated.hour} ${updated.day} ${updated.month} ${updated.weekday}`;
+    setNewJob({ ...newJob, cron_schedule: cron });
+  };
 
   const parseCronSchedule = (cron) => {
     const presetMatch = cronPresets.find((p) => p.value === cron);
@@ -352,10 +377,8 @@ export default function SchedulerPage() {
                   Schedule *
                 </label>
                 <select
-                  value={newJob.cron_schedule}
-                  onChange={(e) =>
-                    setNewJob({ ...newJob, cron_schedule: e.target.value })
-                  }
+                  value={customCron ? "custom" : newJob.cron_schedule}
+                  onChange={(e) => handleCronScheduleChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
                            dark:bg-gray-700 dark:text-white"
@@ -366,6 +389,79 @@ export default function SchedulerPage() {
                     </option>
                   ))}
                 </select>
+
+                {/* Custom Cron Time Picker */}
+                {customCron && (
+                  <div className="mt-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Custom Schedule</p>
+                    <div className="grid grid-cols-5 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute (0-59)</label>
+                        <input
+                          type="text"
+                          value={cronTime.minute}
+                          onChange={(e) => handleCronTimeChange("minute", e.target.value)}
+                          placeholder="0-59 or *"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded
+                                   focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                                   dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Hour (0-23)</label>
+                        <input
+                          type="text"
+                          value={cronTime.hour}
+                          onChange={(e) => handleCronTimeChange("hour", e.target.value)}
+                          placeholder="0-23 or *"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded
+                                   focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                                   dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Day (1-31)</label>
+                        <input
+                          type="text"
+                          value={cronTime.day}
+                          onChange={(e) => handleCronTimeChange("day", e.target.value)}
+                          placeholder="1-31 or *"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded
+                                   focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                                   dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Month (1-12)</label>
+                        <input
+                          type="text"
+                          value={cronTime.month}
+                          onChange={(e) => handleCronTimeChange("month", e.target.value)}
+                          placeholder="1-12 or *"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded
+                                   focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                                   dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Weekday (0-6)</label>
+                        <input
+                          type="text"
+                          value={cronTime.weekday}
+                          onChange={(e) => handleCronTimeChange("weekday", e.target.value)}
+                          placeholder="0-6 or *"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded
+                                   focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                                   dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Use * for "any" value. Example: "30 14 * * *" = Every day at 2:30 PM
+                    </p>
+                  </div>
+                )}
+
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Cron expression: {newJob.cron_schedule}
                 </p>
@@ -434,6 +530,8 @@ export default function SchedulerPage() {
               <button
                 onClick={() => {
                   setShowCreateModal(false);
+                  setCustomCron(false);
+                  setCronTime({ hour: "0", minute: "0", day: "*", month: "*", weekday: "*" });
                   setNewJob({
                     job_name: "",
                     cron_schedule: "0 0 * * *",

@@ -83,9 +83,9 @@ const BatchDetailsPage = () => {
     toast.success("Download started");
   };
 
-  const handleRegenerateExcel = async () => {
+  const handleRegenerateExcel = async (includeBlankColumns = null) => {
     try {
-      const response = await uploadAPI.regenerateExcel(batchId);
+      const response = await uploadAPI.regenerateExcel(batchId, { includeBlankColumns });
       if (response.success) {
         toast.success("Excel file generated successfully");
         loadBatchDetails();
@@ -265,14 +265,30 @@ const BatchDetailsPage = () => {
           )}
           {batch.excel_file_path && (
             <>
-              <button
-                onClick={handleDownload}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg
-                         hover:bg-green-700 transition-colors"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Excel
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg
+                           hover:bg-green-700 transition-colors"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Excel
+                </button>
+                <div className="absolute hidden group-hover:block right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+                  <button
+                    onClick={() => handleRegenerateExcel(true)}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
+                  >
+                    Regenerate with blanks
+                  </button>
+                  <button
+                    onClick={() => handleRegenerateExcel(false)}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg"
+                  >
+                    Regenerate without blanks
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={() => {
                   uploadAPI.downloadCSV(batchId);

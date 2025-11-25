@@ -251,21 +251,22 @@ export default function AnalyticsDashboardPage() {
   const [topSpending, setTopSpending] = useState([]);
   const [paymentDue, setPaymentDue] = useState([]);
   const [vendorComparison, setVendorComparison] = useState([]);
+  const [vendorType, setVendorType] = useState("");
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [vendorType]);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
       const [dashboard, trendsData, topSpend, payments, vendors] =
         await Promise.all([
-          analyticsAPI.getDashboard(),
-          analyticsAPI.getMonthlyTrends(12),
-          analyticsAPI.getTopSpending(10),
-          analyticsAPI.getPaymentDue(7),
-          analyticsAPI.getVendorComparison()
+          analyticsAPI.getDashboard(vendorType),
+          analyticsAPI.getMonthlyTrends(12, vendorType),
+          analyticsAPI.getTopSpending(10, vendorType),
+          analyticsAPI.getPaymentDue(7, vendorType),
+          analyticsAPI.getVendorComparison(vendorType)
         ]);
 
       setDashboardData(dashboard);
@@ -299,13 +300,36 @@ export default function AnalyticsDashboardPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Analytics Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Comprehensive invoice analytics and insights
           </p>
+        </div>
+
+        {/* Category Filter */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Category (Vendor Type):
+            </label>
+            <select
+              value={vendorType}
+              onChange={(e) => setVendorType(e.target.value)}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white min-w-[200px]"
+            >
+              <option value="">All Categories</option>
+              <option value="vodafone">Vodafone Idea</option>
+              <option value="tata">Tata Teleservices</option>
+              <option value="airtel">Bharti Airtel Limited</option>
+              <option value="indus">Indus Towers Limited</option>
+              <option value="ascend">Ascend Telecom Infrastructure</option>
+              <option value="sify">Sify Technologies Limited</option>
+              <option value="bsnl">BSNL (Bharat Sanchar Nigam)</option>
+            </select>
+          </div>
         </div>
 
         {/* Summary Cards */}

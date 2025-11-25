@@ -8,6 +8,7 @@ class SearchService {
     const {
       searchTerm,
       vendor,
+      vendorType,
       circuitId,
       startDate,
       endDate,
@@ -21,23 +22,13 @@ class SearchService {
     const { page = 1, limit = 50 } = pagination;
     const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT
-        id.*,
-        b.batch_name,
-        b.status as batch_status,
-        pr.filename
-      FROM invoice_data id
-      JOIN pdf_records pr ON id.pdf_record_id = pr.id
-      JOIN upload_batches b ON id.batch_id = b.id
-      WHERE 1=1
-    `;
-
+    // Build WHERE clause
+    let whereClause = ' WHERE 1=1';
     const params = [];
 
     // Search term (searches multiple fields)
     if (searchTerm) {
-      query += ` AND (
+      whereClause += ` AND (
         id.bill_number LIKE ? OR
         id.circuit_id LIKE ? OR
         id.company_name LIKE ? OR
@@ -48,62 +39,87 @@ class SearchService {
       params.push(term, term, term, term, term);
     }
 
-    // Vendor filter
+    // Vendor filter (by name or type)
     if (vendor) {
-      query += ' AND id.vendor_name = ?';
+      whereClause += ' AND id.vendor_name = ?';
       params.push(vendor);
+    }
+
+    // Vendor type filter (vodafone/tata)
+    if (vendorType) {
+      whereClause += ' AND id.vendor_type = ?';
+      params.push(vendorType);
     }
 
     // Circuit ID filter
     if (circuitId) {
-      query += ' AND id.circuit_id LIKE ?';
+      whereClause += ' AND id.circuit_id LIKE ?';
       params.push(`%${circuitId}%`);
     }
 
     // Date range filter
     if (startDate) {
-      query += ' AND id.bill_date >= ?';
+      whereClause += ' AND id.bill_date >= ?';
       params.push(startDate);
     }
     if (endDate) {
-      query += ' AND id.bill_date <= ?';
+      whereClause += ' AND id.bill_date <= ?';
       params.push(endDate);
     }
 
     // Amount range filter
     if (minAmount) {
-      query += ' AND id.total >= ?';
+      whereClause += ' AND id.total >= ?';
       params.push(minAmount);
     }
     if (maxAmount) {
-      query += ' AND id.total <= ?';
+      whereClause += ' AND id.total <= ?';
       params.push(maxAmount);
     }
 
     // Location filters
     if (city) {
-      query += ' AND id.city = ?';
+      whereClause += ' AND id.city = ?';
       params.push(city);
     }
     if (state) {
-      query += ' AND id.state = ?';
+      whereClause += ' AND id.state = ?';
       params.push(state);
     }
 
     // Status filter
     if (status) {
-      query += ' AND b.status = ?';
+      whereClause += ' AND b.status = ?';
       params.push(status);
     }
 
     // Get total count
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM invoice_data id
+      JOIN pdf_records pr ON id.pdf_record_id = pr.id
+      JOIN upload_batches b ON id.batch_id = b.id
+      ${whereClause}
+    `;
+
     const [countResult] = await db.query(countQuery, params);
     const total = countResult[0].total;
 
-    // Add ordering and pagination
-    query += ' ORDER BY id.bill_date DESC, id.created_at DESC';
-    query += ' LIMIT ? OFFSET ?';
+    // Build main query
+    const query = `
+      SELECT
+        id.*,
+        b.batch_name,
+        b.status as batch_status,
+        pr.filename
+      FROM invoice_data id
+      JOIN pdf_records pr ON id.pdf_record_id = pr.id
+      JOIN upload_batches b ON id.batch_id = b.id
+      ${whereClause}
+      ORDER BY id.bill_date DESC, id.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
     params.push(limit, offset);
 
     const [results] = await db.query(query, params);

@@ -65,7 +65,9 @@ class UploadController {
       const {
         batchName = `Batch_${Date.now()}`,
         useAI = true,
-        templateId = null
+        templateId = null,
+        includeBlankColumns = true,
+        vendorType = 'vodafone'
       } = req.body;
 
       if (!files || files.length === 0) {
@@ -90,8 +92,8 @@ class UploadController {
 
       // Create batch record
       const [batchResult] = await db.query(
-        'INSERT INTO upload_batches (batch_name, total_files, status) VALUES (?, ?, ?)',
-        [batchName, files.length, 'pending']
+        'INSERT INTO upload_batches (batch_name, vendor_type, total_files, status, include_blank_columns) VALUES (?, ?, ?, ?, ?)',
+        [batchName, vendorType, files.length, 'pending', includeBlankColumns === 'true' || includeBlankColumns === true ? 1 : 0]
       );
 
       const batchId = batchResult.insertId;
@@ -114,7 +116,8 @@ class UploadController {
       // Start processing asynchronously
       UploadController.processAsync(batchId, pdfRecords, {
         useAI: useAI === 'true' || useAI === true,
-        templateId: templateId ? parseInt(templateId) : null
+        templateId: templateId ? parseInt(templateId) : null,
+        vendorType: vendorType || 'vodafone'
       });
 
       res.status(202).json({
@@ -789,6 +792,7 @@ class UploadController {
   static async regenerateExcel(req, res) {
     try {
       const { batchId } = req.params;
+      const { includeBlankColumns } = req.body;
 
       // Get batch info
       const [batches] = await db.query(
@@ -821,13 +825,26 @@ class UploadController {
       // Generate Excel file using batch processor
       const BatchProcessor = require('../services/batchProcessor');
       const processor = new BatchProcessor();
-      const excelPath = await processor.generateBatchExcel(batchId);
 
-      // Update batch with new Excel path
-      await db.query(
-        'UPDATE upload_batches SET excel_file_path = ? WHERE id = ?',
-        [excelPath, batchId]
-      );
+      // Pass includeBlankColumns if provided, otherwise use batch preference
+      const shouldIncludeBlanks = includeBlankColumns !== undefined
+        ? (includeBlankColumns === 'true' || includeBlankColumns === true)
+        : null;
+
+      const excelPath = await processor.generateBatchExcel(batchId, shouldIncludeBlanks);
+
+      // Update batch with new Excel path and blank columns preference if provided
+      if (includeBlankColumns !== undefined) {
+        await db.query(
+          'UPDATE upload_batches SET excel_file_path = ?, include_blank_columns = ? WHERE id = ?',
+          [excelPath, shouldIncludeBlanks ? 1 : 0, batchId]
+        );
+      } else {
+        await db.query(
+          'UPDATE upload_batches SET excel_file_path = ? WHERE id = ?',
+          [excelPath, batchId]
+        );
+      }
 
       res.json({
         success: true,

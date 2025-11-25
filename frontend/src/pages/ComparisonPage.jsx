@@ -35,11 +35,11 @@ export default function ComparisonPage() {
 
     try {
       setLoading(true);
-      const results = await searchAPI.fullTextSearch(searchQuery, { limit: 20 });
+      const results = await searchAPI.fullTextSearch(searchQuery, 50);
       setSearchResults(results || []);
 
       if (results.length === 0) {
-        toast.info('No invoices found');
+        toast('No invoices found', { icon: 'ℹ️' });
       }
     } catch (error) {
       console.error('Error searching:', error);
@@ -56,16 +56,23 @@ export default function ComparisonPage() {
       setLoading(true);
 
       // Load comparison data for this invoice
-      const [comparison, history] = await Promise.all([
-        comparisonAPI.compareInvoice(invoice.id),
-        invoice.circuit_id ? comparisonAPI.getCircuitHistory(invoice.circuit_id, 12) : Promise.resolve([])
-      ]);
+      const comparison = await comparisonAPI.compareInvoice(invoice.id);
 
-      setComparisonData(comparison);
-      setCircuitHistory(history || []);
+      // The API returns { current, previous, history, changes, trend }
+      setComparisonData({
+        current_invoice: comparison.current,
+        previous_invoice: comparison.previous,
+        changes: comparison.changes,
+        trend: comparison.trend
+      });
+
+      // Use the history from comparison response
+      setCircuitHistory(comparison.history || []);
     } catch (error) {
       console.error('Error loading comparison:', error);
       toast.error('Failed to load comparison data');
+      setComparisonData(null);
+      setCircuitHistory([]);
     } finally {
       setLoading(false);
     }
@@ -167,39 +174,71 @@ export default function ComparisonPage() {
         )}
       </div>
 
+      {/* Empty State */}
+      {!selectedInvoice && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-12 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Start Comparing Invoices
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Search for an invoice above to compare it with its previous month's invoice for the same circuit.
+            </p>
+            <div className="text-left bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400">
+              <p className="font-medium mb-2">How it works:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Search by circuit ID, bill number, or customer name</li>
+                <li>Select an invoice from the search results</li>
+                <li>View month-over-month comparison and change analysis</li>
+                <li>See historical trends for the circuit</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Comparison Results */}
       {selectedInvoice && comparisonData && (
         <div className="space-y-6">
           {/* Current vs Previous */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Month-over-Month Comparison
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Current Invoice */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-2">Current Invoice</p>
-                <h4 className="text-xl font-bold text-gray-900 mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Current Invoice</p>
+                <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                   {selectedInvoice.bill_number}
                 </h4>
 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Date:</span>
-                    <span className="font-medium">{selectedInvoice.bill_date}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Date:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {comparisonData.current_invoice?.bill_date ? new Date(comparisonData.current_invoice.bill_date).toLocaleDateString() : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Amount:</span>
-                    <span className="font-medium">₹{selectedInvoice.total_amount?.toLocaleString()}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Amount:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      ₹{parseFloat(comparisonData.current_invoice?.total || 0).toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Circuit:</span>
-                    <span className="font-medium">{selectedInvoice.circuit_id || 'N/A'}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Circuit:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{comparisonData.current_invoice?.circuit_id || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Rental:</span>
-                    <span className="font-medium">₹{selectedInvoice.monthly_rental?.toLocaleString()}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Sub Total:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      ₹{parseFloat(comparisonData.current_invoice?.sub_total || 0).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -207,30 +246,32 @@ export default function ComparisonPage() {
               {/* Previous Invoice */}
               {comparisonData.previous_invoice ? (
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">Previous Invoice</p>
-                  <h4 className="text-xl font-bold text-gray-900 mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Previous Invoice</p>
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                     {comparisonData.previous_invoice.bill_number}
                   </h4>
 
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Date:</span>
-                      <span className="font-medium">{comparisonData.previous_invoice.bill_date}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Amount:</span>
-                      <span className="font-medium">
-                        ₹{comparisonData.previous_invoice.total_amount?.toLocaleString()}
+                      <span className="text-gray-600 dark:text-gray-300">Date:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {comparisonData.previous_invoice.bill_date ? new Date(comparisonData.previous_invoice.bill_date).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Circuit:</span>
-                      <span className="font-medium">{comparisonData.previous_invoice.circuit_id || 'N/A'}</span>
+                      <span className="text-gray-600 dark:text-gray-300">Amount:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        ₹{parseFloat(comparisonData.previous_invoice.total || 0).toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300 dark:text-gray-300">Rental:</span>
-                      <span className="font-medium">
-                        ₹{comparisonData.previous_invoice.monthly_rental?.toLocaleString()}
+                      <span className="text-gray-600 dark:text-gray-300">Circuit:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{comparisonData.previous_invoice.circuit_id || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Sub Total:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        ₹{parseFloat(comparisonData.previous_invoice.sub_total || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -243,39 +284,76 @@ export default function ComparisonPage() {
             </div>
 
             {/* Changes Summary */}
-            {comparisonData.previous_invoice && (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">Total Amount Change</p>
-                  {renderChangeIndicator(
-                    calculateChange(
-                      selectedInvoice.total_amount,
-                      comparisonData.previous_invoice.total_amount
-                    )
+            {comparisonData.previous_invoice && comparisonData.changes && (
+              <div className="mt-6">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">Change Analysis</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {comparisonData.changes.total && (
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Amount Change</p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-lg font-bold ${comparisonData.changes.total.increased ? 'text-red-600' : 'text-green-600'}`}>
+                          {comparisonData.changes.total.increased ? '+' : ''}{comparisonData.changes.total.percentChange}%
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          ₹{comparisonData.changes.total.change}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {comparisonData.changes.recurring_charges && (
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Recurring Charges Change</p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-lg font-bold ${comparisonData.changes.recurring_charges.increased ? 'text-red-600' : 'text-green-600'}`}>
+                          {comparisonData.changes.recurring_charges.increased ? '+' : ''}{comparisonData.changes.recurring_charges.percentChange}%
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          ₹{comparisonData.changes.recurring_charges.change}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {comparisonData.changes.tax_amount && (
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Tax Amount Change</p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-lg font-bold ${comparisonData.changes.tax_amount.increased ? 'text-red-600' : 'text-green-600'}`}>
+                          {comparisonData.changes.tax_amount.increased ? '+' : ''}{comparisonData.changes.tax_amount.percentChange}%
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          ₹{comparisonData.changes.tax_amount.change}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">Monthly Rental Change</p>
-                  {renderChangeIndicator(
-                    calculateChange(
-                      selectedInvoice.monthly_rental,
-                      comparisonData.previous_invoice.monthly_rental
-                    )
-                  )}
-                </div>
-
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">Tax Change</p>
-                  {renderChangeIndicator(
-                    calculateChange(
-                      (selectedInvoice.cgst || 0) + (selectedInvoice.sgst || 0) + (selectedInvoice.igst || 0),
-                      (comparisonData.previous_invoice.cgst || 0) +
-                        (comparisonData.previous_invoice.sgst || 0) +
-                        (comparisonData.previous_invoice.igst || 0)
-                    )
-                  )}
-                </div>
+                {/* Additional Changes */}
+                {Object.keys(comparisonData.changes).length > 3 && (
+                  <div className="mt-4">
+                    <details className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        View All Changes ({Object.keys(comparisonData.changes).length} fields)
+                      </summary>
+                      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {Object.entries(comparisonData.changes).map(([field, change]) => (
+                          <div key={field} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900 rounded">
+                            <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                              {field.replace(/_/g, ' ')}:
+                            </span>
+                            <span className={`text-sm font-semibold ${change.increased ? 'text-red-600' : 'text-green-600'}`}>
+                              {change.increased ? '+' : ''}{change.percentChange}%
+                              {change.significant && <span className="ml-1 text-xs text-orange-500">⚠</span>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -283,48 +361,48 @@ export default function ComparisonPage() {
           {/* Circuit History */}
           {circuitHistory.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Circuit History ({selectedInvoice.circuit_id})
               </h3>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900 dark:bg-gray-900">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         Bill Number
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         Total Amount
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         Monthly Rental
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         Change
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {circuitHistory.map((item, index) => {
                       const previousItem = circuitHistory[index + 1];
                       const change = previousItem ? calculateChange(item.total_amount, previousItem.total_amount) : null;
 
                       return (
-                        <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
+                        <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {item.bill_date}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {item.bill_number}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
                             ₹{item.total_amount?.toLocaleString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
                             ₹{item.monthly_rental?.toLocaleString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -344,7 +422,7 @@ export default function ComparisonPage() {
       {/* Significant Changes */}
       {significantChanges.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Significant Price Changes (&gt;15%)
           </h3>
 
@@ -363,14 +441,14 @@ export default function ComparisonPage() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="text-sm text-gray-600 dark:text-gray-300">From</p>
-                      <p className="font-medium">₹{change.previous_amount?.toLocaleString()}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">₹{change.previous_amount?.toLocaleString()}</p>
                     </div>
 
                     <ArrowRight className="w-5 h-5 text-gray-400" />
 
                     <div className="text-right">
                       <p className="text-sm text-gray-600 dark:text-gray-300">To</p>
-                      <p className="font-medium">₹{change.current_amount?.toLocaleString()}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">₹{change.current_amount?.toLocaleString()}</p>
                     </div>
 
                     <div className="ml-4">

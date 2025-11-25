@@ -6,7 +6,7 @@ class AnalyticsService {
    */
   async getCostAnalytics(filters = {}) {
     try {
-      const { startDate, endDate, vendor, circuitId } = filters;
+      const { startDate, endDate, vendor, vendorType, circuitId } = filters;
 
       let query = `
         SELECT
@@ -37,6 +37,10 @@ class AnalyticsService {
         query += ' AND vendor_name = ?';
         params.push(vendor);
       }
+      if (vendorType) {
+        query += ' AND vendor_type = ?';
+        params.push(vendorType);
+      }
       if (circuitId) {
         query += ' AND circuit_id = ?';
         params.push(circuitId);
@@ -56,7 +60,7 @@ class AnalyticsService {
    * Get circuit-wise cost breakdown
    */
   async getCircuitCostBreakdown(filters = {}) {
-    const { startDate, endDate, limit = 20 } = filters;
+    const { startDate, endDate, vendorType, limit = 20 } = filters;
 
     let query = `
       SELECT
@@ -81,6 +85,10 @@ class AnalyticsService {
       query += ' AND bill_date <= ?';
       params.push(endDate);
     }
+    if (vendorType) {
+      query += ' AND vendor_type = ?';
+      params.push(vendorType);
+    }
 
     query += ' GROUP BY circuit_id, company_name, bandwidth_mbps';
     query += ' ORDER BY total_cost DESC LIMIT ?';
@@ -93,8 +101,8 @@ class AnalyticsService {
   /**
    * Get vendor comparison stats
    */
-  async getVendorComparison() {
-    const [results] = await db.query(`
+  async getVendorComparison(vendorType = null) {
+    let query = `
       SELECT
         vendor_name,
         COUNT(DISTINCT circuit_id) as circuit_count,
@@ -104,18 +112,25 @@ class AnalyticsService {
         SUM(bandwidth_mbps) as total_bandwidth
       FROM invoice_data
       WHERE vendor_name IS NOT NULL
-      GROUP BY vendor_name
-      ORDER BY total_amount DESC
-    `);
+    `;
 
+    const params = [];
+    if (vendorType) {
+      query += ' AND vendor_type = ?';
+      params.push(vendorType);
+    }
+
+    query += ' GROUP BY vendor_name ORDER BY total_amount DESC';
+
+    const [results] = await db.query(query, params);
     return results;
   }
 
   /**
    * Get monthly trend data
    */
-  async getMonthlyTrend(months = 12) {
-    const [results] = await db.query(`
+  async getMonthlyTrend(months = 12, vendorType = null) {
+    let query = `
       SELECT
         DATE_FORMAT(bill_date, '%Y-%m') as month,
         COUNT(*) as invoice_count,
@@ -125,18 +140,25 @@ class AnalyticsService {
         COUNT(DISTINCT circuit_id) as active_circuits
       FROM invoice_data
       WHERE bill_date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
-      GROUP BY month
-      ORDER BY month ASC
-    `, [months]);
+    `;
 
+    const params = [months];
+    if (vendorType) {
+      query += ' AND vendor_type = ?';
+      params.push(vendorType);
+    }
+
+    query += ' GROUP BY month ORDER BY month ASC';
+
+    const [results] = await db.query(query, params);
     return results;
   }
 
   /**
    * Get cost distribution by bandwidth
    */
-  async getCostByBandwidth() {
-    const [results] = await db.query(`
+  async getCostByBandwidth(vendorType = null) {
+    let query = `
       SELECT
         bandwidth_mbps,
         COUNT(*) as circuit_count,
@@ -144,18 +166,25 @@ class AnalyticsService {
         AVG(total) as avg_cost
       FROM invoice_data
       WHERE bandwidth_mbps IS NOT NULL
-      GROUP BY bandwidth_mbps
-      ORDER BY bandwidth_mbps ASC
-    `);
+    `;
 
+    const params = [];
+    if (vendorType) {
+      query += ' AND vendor_type = ?';
+      params.push(vendorType);
+    }
+
+    query += ' GROUP BY bandwidth_mbps ORDER BY bandwidth_mbps ASC';
+
+    const [results] = await db.query(query, params);
     return results;
   }
 
   /**
    * Get top spending circuits
    */
-  async getTopSpendingCircuits(limit = 10) {
-    const [results] = await db.query(`
+  async getTopSpendingCircuits(limit = 10, vendorType = null) {
+    let query = `
       SELECT
         circuit_id,
         company_name,
@@ -167,19 +196,27 @@ class AnalyticsService {
         AVG(total) as avg_monthly
       FROM invoice_data
       WHERE circuit_id IS NOT NULL
-      GROUP BY circuit_id, company_name, city, state, bandwidth_mbps
-      ORDER BY total_spent DESC
-      LIMIT ?
-    `, [limit]);
+    `;
 
+    const params = [];
+    if (vendorType) {
+      query += ' AND vendor_type = ?';
+      params.push(vendorType);
+    }
+
+    query += ' GROUP BY circuit_id, company_name, city, state, bandwidth_mbps';
+    query += ' ORDER BY total_spent DESC LIMIT ?';
+    params.push(limit);
+
+    const [results] = await db.query(query, params);
     return results;
   }
 
   /**
    * Get payment due alerts
    */
-  async getPaymentDueInvoices(daysAhead = 7) {
-    const [results] = await db.query(`
+  async getPaymentDueInvoices(daysAhead = 7, vendorType = null) {
+    let query = `
       SELECT
         id.bill_number,
         id.due_date,
@@ -191,17 +228,25 @@ class AnalyticsService {
       FROM invoice_data id
       JOIN upload_batches b ON id.batch_id = b.id
       WHERE id.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)
-      ORDER BY id.due_date ASC
-    `, [daysAhead]);
+    `;
 
+    const params = [daysAhead];
+    if (vendorType) {
+      query += ' AND id.vendor_type = ?';
+      params.push(vendorType);
+    }
+
+    query += ' ORDER BY id.due_date ASC';
+
+    const [results] = await db.query(query, params);
     return results;
   }
 
   /**
    * Get comprehensive dashboard stats
    */
-  async getDashboardStats() {
-    const [totalStats] = await db.query(`
+  async getDashboardStats(vendorType = null) {
+    let statsQuery = `
       SELECT
         COUNT(DISTINCT batch_id) as total_batches,
         COUNT(*) as total_invoices,
@@ -210,17 +255,30 @@ class AnalyticsService {
         COUNT(DISTINCT circuit_id) as unique_circuits,
         COUNT(DISTINCT vendor_name) as vendor_count
       FROM invoice_data
-    `);
+    `;
 
-    const [recentActivity] = await db.query(`
+    let activityQuery = `
       SELECT
         DATE(created_at) as date,
         COUNT(*) as invoice_count
       FROM invoice_data
       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-      GROUP BY DATE(created_at)
-      ORDER BY date DESC
-    `);
+    `;
+
+    const statsParams = [];
+    const activityParams = [];
+
+    if (vendorType) {
+      statsQuery += ' WHERE vendor_type = ?';
+      statsParams.push(vendorType);
+      activityQuery += ' AND vendor_type = ?';
+      activityParams.push(vendorType);
+    }
+
+    activityQuery += ' GROUP BY DATE(created_at) ORDER BY date DESC';
+
+    const [totalStats] = await db.query(statsQuery, statsParams);
+    const [recentActivity] = await db.query(activityQuery, activityParams);
 
     return {
       summary: totalStats[0],

@@ -14,6 +14,8 @@ const UploadPage = () => {
   const [useAI, setUseAI] = useState(true);
   const [templateId, setTemplateId] = useState("");
   const [templates, setTemplates] = useState([]);
+  const [includeBlankColumns, setIncludeBlankColumns] = useState(true);
+  const [vendorType, setVendorType] = useState("vodafone");
 
   useEffect(() => {
     loadTemplates();
@@ -113,6 +115,8 @@ const UploadPage = () => {
       });
       formData.append("batchName", batchName);
       formData.append("useAI", useAI);
+      formData.append("includeBlankColumns", includeBlankColumns);
+      formData.append("vendorType", vendorType);
       if (templateId) {
         formData.append("templateId", templateId);
       }
@@ -167,7 +171,7 @@ const UploadPage = () => {
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Batch Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
@@ -180,6 +184,26 @@ const UploadPage = () => {
               placeholder="e.g., Vodafone Invoices - January 2025"
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
+          </div>
+
+          {/* Vendor Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Vendor Type *
+            </label>
+            <select
+              value={vendorType}
+              onChange={(e) => setVendorType(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            >
+              <option value="vodafone">Vodafone Idea</option>
+              <option value="tata">Tata Teleservices</option>
+              <option value="airtel">Bharti Airtel Limited</option>
+              <option value="indus">Indus Towers Limited</option>
+              <option value="ascend">Ascend Telecom Infrastructure</option>
+              <option value="sify">Sify Technologies Limited</option>
+              <option value="bsnl">BSNL (Bharat Sanchar Nigam)</option>
+            </select>
           </div>
 
           {/* Template Selection */}
@@ -222,6 +246,24 @@ const UploadPage = () => {
           <p className="mt-2 ml-8 text-sm text-gray-500 dark:text-gray-400">
             AI extraction works with multiple vendor formats and provides higher
             accuracy
+          </p>
+        </div>
+
+        {/* Blank Columns Toggle */}
+        <div className="mt-4">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeBlankColumns}
+              onChange={(e) => setIncludeBlankColumns(e.target.checked)}
+              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-400"
+            />
+            <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-200">
+              Include blank columns in Excel export
+            </span>
+          </label>
+          <p className="mt-2 ml-8 text-sm text-gray-500 dark:text-gray-400">
+            When unchecked, only columns with data will be included in the Excel file
           </p>
         </div>
       </div>

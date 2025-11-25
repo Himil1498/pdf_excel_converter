@@ -12,7 +12,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [filterOptions, setFilterOptions] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50);
   const [totalResults, setTotalResults] = useState(0);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -20,6 +21,7 @@ export default function SearchPage() {
   // Filters
   const [filters, setFilters] = useState({
     vendor: "",
+    vendorType: "",
     circuitId: "",
     startDate: "",
     endDate: "",
@@ -46,7 +48,7 @@ export default function SearchPage() {
   const fetchRecentInvoices = async () => {
     try {
       setLoading(true);
-      const recent = await searchAPI.getRecentInvoices(20);
+      const recent = await searchAPI.getRecentInvoices(500);
       setResults(recent);
       setTotalResults(recent.length);
     } catch (error) {
@@ -59,20 +61,22 @@ export default function SearchPage() {
   const handleSearch = async () => {
     try {
       setLoading(true);
+      setCurrentPage(1); // Reset to first page on new search
 
       if (searchTerm.trim()) {
-        // Full-text search
-        const searchResults = await searchAPI.fullTextSearch(searchTerm);
+        // Full-text search - increased limit to show more results
+        const searchResults = await searchAPI.fullTextSearch(searchTerm, 500);
         setResults(searchResults);
         setTotalResults(searchResults.length);
       } else {
         // Advanced search with filters
-        const searchData = await searchAPI.search(filters, pagination);
-        setResults(searchData.data);
-        setTotalResults(searchData.pagination?.total || 0);
+        const searchData = await searchAPI.search(filters, { page: 1, limit: 500 });
+        setResults(searchData.data || []);
+        setTotalResults(searchData.pagination?.total || searchData.data?.length || 0);
       }
     } catch (error) {
       console.error("Error searching:", error);
+      toast.error("Search failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -85,6 +89,7 @@ export default function SearchPage() {
   const clearFilters = () => {
     setFilters({
       vendor: "",
+      vendorType: "",
       circuitId: "",
       startDate: "",
       endDate: "",
@@ -176,6 +181,29 @@ export default function SearchPage() {
                         {vendor}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                {/* Vendor Type/Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Category (Vendor Type)
+                  </label>
+                  <select
+                    value={filters.vendorType}
+                    onChange={(e) =>
+                      handleFilterChange("vendorType", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">All Categories</option>
+                    <option value="vodafone">Vodafone Idea</option>
+                    <option value="tata">Tata Teleservices</option>
+                    <option value="airtel">Bharti Airtel Limited</option>
+                    <option value="indus">Indus Towers Limited</option>
+                    <option value="ascend">Ascend Telecom Infrastructure</option>
+                    <option value="sify">Sify Technologies Limited</option>
+                    <option value="bsnl">BSNL (Bharat Sanchar Nigam)</option>
                   </select>
                 </div>
 
@@ -323,6 +351,11 @@ export default function SearchPage() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 Search Results ({totalResults})
               </h2>
+              {totalResults >= 500 && (
+                <p className="text-sm text-orange-600 dark:text-orange-400">
+                  Showing first 500 results. Use filters for more specific search.
+                </p>
+              )}
             </div>
           </div>
 
@@ -364,13 +397,15 @@ export default function SearchPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {results.map((invoice, index) => (
+                  {results
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((invoice, index) => (
                     <tr
-                      key={index}
+                      key={invoice.id || index}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
-                        {invoice.bill_number}
+                        {invoice.bill_number || invoice.bill_id || "-"}
                       </td>
                       <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
                         {invoice.bill_date
@@ -378,13 +413,13 @@ export default function SearchPage() {
                           : "-"}
                       </td>
                       <td className="py-4 px-6 text-sm text-gray-900 dark:text-gray-100">
-                        {invoice.company_name || "-"}
+                        {invoice.company_name || invoice.vendor_name || "-"}
                       </td>
                       <td className="py-4 px-6 text-sm font-mono text-xs text-gray-900 dark:text-gray-100">
-                        {invoice.circuit_id || "-"}
+                        {invoice.circuit_id || invoice.vendor_circuit_id || "-"}
                       </td>
                       <td className="py-4 px-6 text-sm text-right font-medium text-green-600 dark:text-green-400">
-                        ₹{parseFloat(invoice.total || 0).toLocaleString()}
+                        ₹{parseFloat(invoice.total || invoice.total_amount || 0).toLocaleString()}
                       </td>
                       <td className="py-4 px-6 text-center">
                         <button
@@ -402,6 +437,36 @@ export default function SearchPage() {
               </table>
             )}
           </div>
+
+          {/* Pagination */}
+          {!loading && results.length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalResults)} to {Math.min(currentPage * itemsPerPage, totalResults)} of {totalResults} results
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Page {currentPage} of {Math.ceil(totalResults / itemsPerPage)}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalResults / itemsPerPage), p + 1))}
+                    disabled={currentPage >= Math.ceil(totalResults / itemsPerPage)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

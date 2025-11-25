@@ -13,11 +13,12 @@ import ValidationPage from './pages/ValidationPage';
 import CorrectionPage from './pages/CorrectionPage';
 import ComparisonPage from './pages/ComparisonPage';
 import SchedulerPage from './pages/SchedulerPage';
+import HelpPage from './pages/HelpPage';
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -61,6 +62,7 @@ function App() {
           <Route path="search" element={<SearchPage />} />
           <Route path="comparison" element={<ComparisonPage />} />
           <Route path="scheduler" element={<SchedulerPage />} />
+          <Route path="help" element={<HelpPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

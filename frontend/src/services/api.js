@@ -73,7 +73,7 @@ export const uploadAPI = {
 
   retrySingleFile: (batchId, fileId, options = {}) => api.post(`/batches/${batchId}/files/${fileId}/retry`, options),
 
-  regenerateExcel: (batchId) => api.post(`/batches/${batchId}/regenerate-excel`),
+  regenerateExcel: (batchId, options = {}) => api.post(`/batches/${batchId}/regenerate-excel`, options),
 };
 
 export const templateAPI = {
@@ -115,14 +115,35 @@ export const validationAPI = {
 
 // Analytics API
 export const analyticsAPI = {
-  getDashboard: () => api.get('/analytics/dashboard'),
+  getDashboard: (vendorType = '') => {
+    const params = vendorType ? { vendorType } : {};
+    return api.get('/analytics/dashboard', { params });
+  },
   getCostAnalytics: (filters) => api.get('/analytics/costs', { params: filters }),
   getCircuitBreakdown: (filters) => api.get('/analytics/circuits', { params: filters }),
-  getVendorComparison: () => api.get('/analytics/vendors'),
-  getMonthlyTrends: (months = 12) => api.get('/analytics/trends', { params: { months } }),
-  getCostByBandwidth: () => api.get('/analytics/bandwidth'),
-  getTopSpending: (limit = 10) => api.get('/analytics/top-spending', { params: { limit } }),
-  getPaymentDue: (days = 7) => api.get('/analytics/payment-due', { params: { days } }),
+  getVendorComparison: (vendorType = '') => {
+    const params = vendorType ? { vendorType } : {};
+    return api.get('/analytics/vendors', { params });
+  },
+  getMonthlyTrends: (months = 12, vendorType = '') => {
+    const params = { months };
+    if (vendorType) params.vendorType = vendorType;
+    return api.get('/analytics/trends', { params });
+  },
+  getCostByBandwidth: (vendorType = '') => {
+    const params = vendorType ? { vendorType } : {};
+    return api.get('/analytics/bandwidth', { params });
+  },
+  getTopSpending: (limit = 10, vendorType = '') => {
+    const params = { limit };
+    if (vendorType) params.vendorType = vendorType;
+    return api.get('/analytics/top-spending', { params });
+  },
+  getPaymentDue: (days = 7, vendorType = '') => {
+    const params = { days };
+    if (vendorType) params.vendorType = vendorType;
+    return api.get('/analytics/payment-due', { params });
+  },
 };
 
 // Search API

@@ -30,16 +30,31 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 // Security
 app.use(helmet());
 
-// CORS
+// CORS - More permissive in development
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:3000', 'http://localhost:5173'];
+  : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:3001', 'http://localhost:3002'];
+
+console.log('========================================');
+console.log('CORS Configuration:');
+console.log(`  Environment: ${isDevelopment ? 'development' : 'production'}`);
+console.log(`  Allowed Origins: ${allowedOrigins.join(', ')}`);
+console.log(`  Development Mode: ${isDevelopment ? 'ALL ORIGINS ALLOWED' : 'RESTRICTED'}`);
+console.log('========================================');
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    console.log(`[CORS] Request from origin: ${origin || 'NO ORIGIN (same-origin or tool)'}`);
+
+    // In development, allow all origins or those in the allowed list
+    if (isDevelopment) {
+      console.log(`[CORS] ✅ ALLOWED (development mode)`);
+      callback(null, true);
+    } else if (!origin || allowedOrigins.includes(origin)) {
+      console.log(`[CORS] ✅ ALLOWED`);
       callback(null, true);
     } else {
+      console.warn(`[CORS] ❌ BLOCKED - Origin not in allowed list`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -81,6 +96,16 @@ app.use('/api/', limiter);
 
 // Serve static files (for uploaded files)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log('');
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log(`  Origin: ${req.headers.origin || 'None'}`);
+  console.log(`  User-Agent: ${req.headers['user-agent'] || 'None'}`);
+  console.log(`  IP: ${req.ip}`);
+  next();
+});
 
 // ===== ROUTES =====
 
@@ -128,7 +153,22 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('');
+  console.error('========================================');
+  console.error('[ERROR] Server Error Occurred');
+  console.error('========================================');
+  console.error(`[ERROR] Request: ${req.method} ${req.url}`);
+  console.error(`[ERROR] Origin: ${req.headers.origin || 'None'}`);
+  console.error(`[ERROR] Error Message: ${err.message}`);
+  console.error(`[ERROR] Error Name: ${err.name}`);
+  console.error(`[ERROR] Status Code: ${err.statusCode || 500}`);
+  console.error('========================================');
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('[ERROR] Stack Trace:');
+    console.error(err.stack);
+    console.error('========================================');
+  }
+  console.error('');
 
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal server error';
@@ -144,37 +184,57 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   try {
+    console.log('');
+    console.log('========================================');
+    console.log('  Starting PDF to Excel Converter API');
+    console.log('========================================');
+    console.log(`[Startup] Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`[Startup] Port: ${PORT}`);
+    console.log(`[Startup] Database: ${process.env.DB_NAME}`);
+    console.log(`[Startup] Database Host: ${process.env.DB_HOST}`);
+    console.log('========================================');
+    console.log('');
+
     // Test database connection
+    console.log('[Startup] Testing database connection...');
     const dbConnected = await db.testConnection();
 
     if (!dbConnected) {
-      console.error('Failed to connect to database. Please check your configuration.');
+      console.error('[Startup] ❌ Failed to connect to database. Please check your configuration.');
       process.exit(1);
     }
+    console.log('[Startup] ✅ Database connected successfully');
 
     // Create upload directories
+    console.log('[Startup] Creating upload directories...');
     const fs = require('fs').promises;
     const uploadDirs = ['uploads/pdfs', 'uploads/exports'];
 
     for (const dir of uploadDirs) {
       await fs.mkdir(path.join(__dirname, '../', dir), { recursive: true });
+      console.log(`[Startup] ✅ Created directory: ${dir}`);
     }
 
     // Start server
     app.listen(PORT, () => {
       console.log('');
       console.log('========================================');
-      console.log('  PDF to Excel Converter API');
+      console.log('  PDF to Excel Converter API - READY');
       console.log('========================================');
       console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`  Server running on: http://localhost:${PORT}`);
       console.log(`  Database: ${process.env.DB_NAME}`);
+      console.log(`  Frontend URL: http://localhost:5173`);
+      console.log('========================================');
+      console.log('  Server is ready to accept requests!');
       console.log('========================================');
       console.log('');
     });
 
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('[Startup] ❌ Failed to start server:', error);
+    console.error('[Startup] Error details:', error.message);
+    console.error('[Startup] Stack trace:', error.stack);
     process.exit(1);
   }
 };

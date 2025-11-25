@@ -7,7 +7,8 @@ import {
   BarChart3,
   Search,
   GitCompare,
-  Clock
+  Clock,
+  HelpCircle
 } from "lucide-react";
 import AlertsNotification from "./AlertsNotification";
 import ThemeToggle from "./ThemeToggle";
@@ -194,8 +195,15 @@ const Layout = () => {
               </NavLink>
             </nav>
 
-            {/* Theme Toggle & Alerts */}
+            {/* Theme Toggle, Help & Alerts */}
             <div className="flex items-center gap-3">
+              <NavLink
+                to="/help"
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Help & Guide"
+              >
+                <HelpCircle className="h-5 w-5" />
+              </NavLink>
               <ThemeToggle />
               <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
               <AlertsNotification />

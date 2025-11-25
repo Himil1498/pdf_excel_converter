@@ -9,6 +9,11 @@ class ExportService {
    */
   async exportToExcel(batchId) {
     try {
+      // Get batch info first
+      const [batchInfo] = await db.query(`
+        SELECT batch_name, vendor_type FROM upload_batches WHERE id = ?
+      `, [batchId]);
+
       const [invoices] = await db.query(`
         SELECT * FROM invoice_data WHERE batch_id = ? ORDER BY id
       `, [batchId]);
@@ -32,7 +37,13 @@ class ExportService {
         fgColor: { argb: 'FF4472C4' }
       };
 
-      const filename = `batch_${batchId}_${Date.now()}.xlsx`;
+      // Generate filename: BatchName_VendorName_Date_Time.xlsx
+      const batchName = (batchInfo[0]?.batch_name || `Batch_${batchId}`).replace(/[^a-zA-Z0-9-_]/g, '_');
+      const vendorName = batchInfo[0]?.vendor_type === 'tata' ? 'TataTeleservices' : 'VodafoneIdea';
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
+      const filename = `${batchName}_${vendorName}_${dateStr}_${timeStr}.xlsx`;
       const filepath = path.join(process.env.UPLOAD_DIR || './uploads', filename);
 
       await workbook.xlsx.writeFile(filepath);
@@ -52,6 +63,11 @@ class ExportService {
    */
   async exportToCSV(batchId) {
     try {
+      // Get batch info first
+      const [batchInfo] = await db.query(`
+        SELECT batch_name, vendor_type FROM upload_batches WHERE id = ?
+      `, [batchId]);
+
       const [invoices] = await db.query(`
         SELECT * FROM invoice_data WHERE batch_id = ? ORDER BY id
       `, [batchId]);
@@ -69,7 +85,13 @@ class ExportService {
 
       const csv = [headers, ...rows].join('\n');
 
-      const filename = `batch_${batchId}_${Date.now()}.csv`;
+      // Generate filename: BatchName_VendorName_Date_Time.csv
+      const batchName = (batchInfo[0]?.batch_name || `Batch_${batchId}`).replace(/[^a-zA-Z0-9-_]/g, '_');
+      const vendorName = batchInfo[0]?.vendor_type === 'tata' ? 'TataTeleservices' : 'VodafoneIdea';
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+      const filename = `${batchName}_${vendorName}_${dateStr}_${timeStr}.csv`;
       const filepath = path.join(process.env.UPLOAD_DIR || './uploads', filename);
 
       await fs.writeFile(filepath, csv, 'utf8');
@@ -88,11 +110,22 @@ class ExportService {
    */
   async exportToJSON(batchId) {
     try {
+      // Get batch info first
+      const [batchInfo] = await db.query(`
+        SELECT batch_name, vendor_type FROM upload_batches WHERE id = ?
+      `, [batchId]);
+
       const [invoices] = await db.query(`
         SELECT * FROM invoice_data WHERE batch_id = ? ORDER BY id
       `, [batchId]);
 
-      const filename = `batch_${batchId}_${Date.now()}.json`;
+      // Generate filename: BatchName_VendorName_Date_Time.json
+      const batchName = (batchInfo[0]?.batch_name || `Batch_${batchId}`).replace(/[^a-zA-Z0-9-_]/g, '_');
+      const vendorName = batchInfo[0]?.vendor_type === 'tata' ? 'TataTeleservices' : 'VodafoneIdea';
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+      const filename = `${batchName}_${vendorName}_${dateStr}_${timeStr}.json`;
       const filepath = path.join(process.env.UPLOAD_DIR || './uploads', filename);
 
       await fs.writeFile(filepath, JSON.stringify(invoices, null, 2), 'utf8');

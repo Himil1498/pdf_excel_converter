@@ -17,7 +17,8 @@ class BatchProcessor {
     const {
       useAI = true,
       templateId = null,
-      onProgress = null
+      onProgress = null,
+      vendorType = 'vodafone'
     } = options;
 
     // Mark batch as processing
@@ -37,7 +38,7 @@ class BatchProcessor {
       await Promise.all(
         chunk.map(async (file) => {
           try {
-            await this.processSingleFile(batchId, file, template, useAI);
+            await this.processSingleFile(batchId, file, template, useAI, vendorType);
             processedCount++;
           } catch (error) {
             console.error(`Failed to process ${file.filename}:`, error.message);
@@ -90,13 +91,13 @@ class BatchProcessor {
   /**
    * Process a single PDF file
    */
-  async processSingleFile(batchId, file, template, useAI) {
+  async processSingleFile(batchId, file, template, useAI, vendorType = 'vodafone') {
     const startTime = Date.now();
 
     // Update file status to processing
     await db.query(
-      'UPDATE pdf_records SET status = ? WHERE id = ?',
-      ['processing', file.id]
+      'UPDATE pdf_records SET status = ?, vendor_type = ? WHERE id = ?',
+      ['processing', vendorType, file.id]
     );
 
     try {
@@ -104,7 +105,8 @@ class BatchProcessor {
       const result = await pdfParser.extractInvoiceData(
         file.file_path,
         template,
-        useAI
+        useAI,
+        vendorType
       );
 
       if (!result.success) {
@@ -114,7 +116,7 @@ class BatchProcessor {
       const processingTime = Date.now() - startTime;
 
       // Store extracted data
-      await this.storeExtractedData(batchId, file.id, result.data, file.filename);
+      await this.storeExtractedData(batchId, file.id, result.data, file.filename, vendorType);
 
       // Update PDF record
       await db.query(
@@ -144,27 +146,28 @@ class BatchProcessor {
   /**
    * Store extracted data in invoice_data table
    */
-  async storeExtractedData(batchId, pdfRecordId, data, filename) {
+  async storeExtractedData(batchId, pdfRecordId, data, filename, vendorType = 'vodafone') {
     const insertQuery = `
       INSERT INTO invoice_data (
-        pdf_record_id, batch_id, filename, bill_date, due_date, bill_id,
+        pdf_record_id, batch_id, filename, vendor_type, bill_date, due_date, bill_id,
         vendor_name, vendor_circuit_id, bill_number, purchase_order,
         currency_code, sub_total, total, item_name, description,
         tax_amount, gstin, hsn_sac, relationship_number, control_number,
         circuit_id, bandwidth_mbps, company_name, city, state, pin,
         contact_person, contact_number, installation_address,
         cgst, sgst, annual_charges, plan_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
       pdfRecordId,
       batchId,
       filename,
+      vendorType,
       data.billDate || null,
       data.dueDate || null,
       data.invoiceNumber || data.billId || null,
-      data.vendorName || 'Vodafone Idea',
+      data.vendorName || (vendorType === 'tata' ? 'TATA TELESERVICES LTD' : 'Vodafone Idea'),
       data.circuitId || null,
       data.invoiceNumber || null,
       data.poNumber || data.purchaseOrder || null,
@@ -199,7 +202,24 @@ class BatchProcessor {
   /**
    * Generate Excel file for entire batch
    */
-  async generateBatchExcel(batchId) {
+  async generateBatchExcel(batchId, includeBlankColumns = null) {
+    // Fetch batch info to get includeBlankColumns and vendor_type preference
+    const [batches] = await db.query(
+      'SELECT include_blank_columns, vendor_type FROM upload_batches WHERE id = ?',
+      [batchId]
+    );
+
+    if (batches.length === 0) {
+      throw new Error('Batch not found');
+    }
+
+    // Use provided value or fallback to batch preference
+    const shouldIncludeBlanks = includeBlankColumns !== null
+      ? includeBlankColumns
+      : (batches[0].include_blank_columns === 1);
+
+    const vendorType = batches[0].vendor_type || 'vodafone';
+
     // Fetch all invoice data for this batch
     const [records] = await db.query(
       'SELECT * FROM pdf_records WHERE batch_id = ? AND status = ?',
@@ -223,8 +243,8 @@ class BatchProcessor {
     const outputDir = path.join(process.env.UPLOAD_DIR || './uploads', 'exports');
     const outputPath = path.join(outputDir, `batch_${batchId}_${timestamp}.xlsx`);
 
-    // Generate Excel
-    const result = await excelGenerator.generateExcel(invoiceData, outputPath);
+    // Generate Excel with blank columns preference and vendor type
+    const result = await excelGenerator.generateExcel(invoiceData, outputPath, null, shouldIncludeBlanks, vendorType);
 
     if (!result.success) {
       throw new Error(`Excel generation failed: ${result.error}`);
