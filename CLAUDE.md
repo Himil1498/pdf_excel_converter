@@ -6,6 +6,7 @@
 2. **Component Size Rule**: Maximum 250 lines of code per component (as per Facebook/React best practices)
 3. **Reusable Components**: Break down large components into smaller, reusable pieces
 4. **Code Organization**: Extract logic into custom hooks, separate utility functions
+5. **DOCUMENT CREATION RULE**: **NEVER** create any documentation files (.md, .txt, reports, etc.) without **EXPLICIT USER PERMISSION**. Always ask the user first before creating any document.
 
 ## Project Overview
 A professional-grade application for bulk converting 500-1000 PDF invoices to structured Excel files with AI-powered data extraction, analytics, validation, and cloud integration.

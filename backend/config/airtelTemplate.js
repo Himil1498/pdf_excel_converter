@@ -132,20 +132,67 @@ module.exports = {
   // Field extraction patterns for Airtel PDFs
   // NOTE: pdf-parse removes spaces, so use \s* (zero or more) instead of \s+ (one or more)
   extractionPatterns: {
+    // Basic Information
     vendor_name: /BHARTI\s+AIRTEL\s+LTD?/i,
-    bill_number: /Bill\s*no\s*([A-Z0-9]+)/i,
-    bill_date: /Bill\s*date\s*(\d{1,2}[-\/][A-Z]+[-\/]\d{4})/i,
-    due_date: /Pay\s*By\s*date\s*(\d{1,2}[-\/][A-Z]+[-\/]\d{4})/i,
-    subtotal: /Sub[-\s]*Total\s*([0-9,]+\.?\d*)/i,
+    bill_number: /(?:Bill\s*no|Invoice\s*No|Bill\s*Number)\s*:?\s*([A-Z0-9]+)/i,
+    bill_date: /(?:Bill\s*date|Invoice\s*Date)\s*:?\s*(\d{1,2}[-\/][A-Z]{3}[-\/]\d{4}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i,
+    due_date: /(?:Pay\s*By\s*date|Due\s*Date)\s*:?\s*(\d{1,2}[-\/][A-Z]{3}[-\/]\d{4}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i,
+
+    // Financial Information (NO SPACES in Airtel PDFs!)
+    subtotal: /Sub[-\s]*Total\s*:?\s*(?:INR|Rs\.?)?\s*([0-9,]+\.?\d*)/i,
     total: /Total\s*\(INR\)\s*([0-9,]+\.?\d*)/i,
-    cgst: /CGST\s*([0-9,]+\.?\d*)/i,
-    sgst: /SGST\/UTGST\s*([0-9,]+\.?\d*)/i,
-    igst: /IGST\s*([0-9,]+\.?\d*)/i,
-    customer_gstin: /Customer\s*GSTIN\.?\s*:\s*([0-9A-Z]{15})/i,
-    place_of_supply: /Place\s*of\s*Supply\s*:\s*([A-Z\s]+)/i,
-    hsn_sac: /HSN\s*CODE:\s*(\d+)/i,
-    account_number: /Account\s*no\s*(\d+-\d+)/i,
-    internal_id: /Internal\s*id\s*([-\d]+)/i
+    recurring_charges: /Recurring\s*charges\s*([0-9,]+\.\d{2})/i,
+    one_time_charges: /One\s*time\s*charges\s*([0-9,]+\.\d{2})/i,
+    discount_amount: /Discount\s*([0-9,]+\.\d{2})/i,
+    amount_in_words: /Amount\s*in\s*Words?\s*:?\s*(?:INR\s*)?([A-Za-z\s]+(?:Only|Paise))/i,
+
+    // GST Information (NO SPACES between label and amount in Airtel PDFs!)
+    cgst: /CGST\s*([0-9,]+\.\d{2})/i,
+    sgst: /(?:SGST|UTGST|SGST\/UTGST)\s*([0-9,]+\.\d{2})/i,
+    igst: /IGST\s*([0-9,]+\.\d{2})/i,
+
+    // Tax rates - Airtel PDFs have summary table with percentages
+    cgst_rate: /CGST\s*@?\s*(\d+(?:\.\d+)?)%|CGST.*?(\d+)%/i,
+    sgst_rate: /(?:SGST|UTGST)\s*@?\s*(\d+(?:\.\d+)?)%|SGST.*?(\d+)%/i,
+    igst_rate: /IGST\s*@?\s*(\d+(?:\.\d+)?)%|IGST.*?(\d+)%/i,
+    tax_percentage: /GST\s*@?\s*(\d+)%|Tax\s*@?\s*(\d+)%/i,
+    total_taxes: /Total\s*Taxes\s*([0-9,]+\.\d{2})/i,
+
+    // GSTIN & Tax Information
+    customer_gstin: /(?:Customer\s*GSTIN|Your\s*GSTIN)\s*\.?\s*:\s*([0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1})/i,
+    vendor_gstin: /(?:GST\s*(?:Registration\s*)?No|GSTIN)\s*\.?\s*:\s*([0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1})/i,
+    customer_pan: /Customer\s*PAN\s*No\.\s*:\s*([A-Z]{5}\d{4}[A-Z])/i,
+    irn_code: /IRN\s*Code\s*:\s*([a-f0-9]{64})/i,
+
+    // Location & Supply (Clean up newlines and extra text)
+    place_of_supply: /Place\s*of\s*Supply\s*:\s*([A-Z\s]+?)(?:\n|State|$)/i,
+    state: /STATE:\s*([A-Za-z\s]+?)(?:,|STATE|$)/i,
+    branch: /(?:Branch|Office)\s*:\s*([A-Za-z\s]+)/i,
+
+    // Service Details
+    hsn_sac: /(?:HSN|SAC)\s*(?:CODE|No)?\s*:?\s*(\d+)/i,
+    service_description: /(?:Description|Service|Product)\s*:?\s*([A-Za-z0-9\s\-\/]+(?:Bandwidth|Leased|MPLS|Internet|Broadband)[A-Za-z0-9\s\-\/]*)/i,
+    item_name: /(?:Item|Service\s*Name)\s*:?\s*([A-Za-z0-9\s\-\/]+)/i,
+
+    // Account & Circuit Information
+    account_number: /(?:Account\s*no|Account\s*Number|A\/C\s*No)\s*:?\s*([\d\-]+)/i,
+    circuit_id: /(?:Circuit\s*ID|Service\s*ID|Link\s*ID)\s*:?\s*([A-Z0-9\-\/]{5,})/i,
+    service_id: /Service\s*ID\s*:?\s*([A-Z0-9\-]{5,})/i,
+
+    // Bandwidth & Technical
+    bandwidth: /(?:Bandwidth|BW)\s*:?\s*(\d+(?:\.\d+)?)\s*(?:Mbps|MBPS|mbps|MB)/i,
+
+    // Dates & Periods
+    internal_id: /Internal\s*id\s*([-\d]+)/i,
+    bill_period_from: /(?:Bill\s*Period|Service\s*Period)\s*:?\s*(?:From)?\s*(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/i,
+    bill_period_to: /(?:Bill\s*Period|Service\s*Period)\s*:?.*?(?:To|-)?\s*(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})\s*$/im,
+
+    // Rate & Charges
+    monthly_rate: /(?:Monthly\s*Rent|Rental|Recurring\s*Charge|Rate)\s*:?\s*(?:INR|Rs\.?)?\s*([0-9,]+\.?\d*)/i,
+
+    // Additional Information
+    vendor_notes: /(?:Note|Remarks)\s*:?\s*([A-Za-z0-9\s,\.;:\-]{10,200})(?:\n|$)/i,
+    terms_conditions: /(?:Terms\s*and\s*Conditions|Terms\s*&\s*Conditions)\s*:?\s*([A-Za-z0-9\s,\.;:\-]{10,200})(?:\n|$)/i
   },
 
   // Default values

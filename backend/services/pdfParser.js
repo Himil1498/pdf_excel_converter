@@ -351,6 +351,9 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
     const dueDateMatch = text.match(patterns.due_date);
     extracted.dueDate = dueDateMatch ? this.formatDate(dueDateMatch[1]) : null;
 
+    const internalIdMatch = text.match(patterns.internal_id);
+    extracted.billId = internalIdMatch ? internalIdMatch[1].trim() : null;
+
     // Financial Information
     const subtotalMatch = text.match(patterns.subtotal);
     extracted.subTotal = subtotalMatch ? this.cleanNumeric(subtotalMatch[1]) : null;
@@ -358,30 +361,175 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
     const totalMatch = text.match(patterns.total);
     extracted.total = extracted.totalPayable = totalMatch ? this.cleanNumeric(totalMatch[1]) : null;
 
-    // GST Information
+    // Additional Financial Information
+    const recurringChargesMatch = text.match(patterns.recurring_charges);
+    extracted.recurringCharges = recurringChargesMatch ? this.cleanNumeric(recurringChargesMatch[1]) : null;
+
+    const oneTimeChargesMatch = text.match(patterns.one_time_charges);
+    extracted.oneTimeCharges = oneTimeChargesMatch ? this.cleanNumeric(oneTimeChargesMatch[1]) : null;
+
+    const discountAmountMatch = text.match(patterns.discount_amount);
+    extracted.discountAmount = discountAmountMatch ? this.cleanNumeric(discountAmountMatch[1]) : null;
+
+    const amountInWordsMatch = text.match(patterns.amount_in_words);
+    extracted.amountInWords = amountInWordsMatch ? amountInWordsMatch[1].trim() : null;
+
+    // Rate Information
+    const monthlyRateMatch = text.match(patterns.monthly_rate);
+    extracted.rate = monthlyRateMatch ? this.cleanNumeric(monthlyRateMatch[1]) : null;
+    if (!extracted.rate && extracted.subTotal) {
+      extracted.rate = extracted.subTotal;
+    }
+
+    // Total Taxes (for verification)
+    const totalTaxesMatch = text.match(patterns.total_taxes);
+    const totalTaxes = totalTaxesMatch ? this.cleanNumeric(totalTaxesMatch[1], true) : null;
+
+    // GST Information - Amounts
     const cgstMatch = text.match(patterns.cgst);
-    extracted.cgst = extracted.cgstAmount = cgstMatch ? this.cleanNumeric(cgstMatch[1]) : null;
+    extracted.cgst = extracted.cgstAmount = cgstMatch ? this.cleanNumeric(cgstMatch[1], true) : null;
 
     const sgstMatch = text.match(patterns.sgst);
-    extracted.sgst = extracted.sgstAmount = sgstMatch ? this.cleanNumeric(sgstMatch[1]) : null;
+    extracted.sgst = extracted.sgstAmount = sgstMatch ? this.cleanNumeric(sgstMatch[1], true) : null;
 
     const igstMatch = text.match(patterns.igst);
-    extracted.igst = extracted.igstAmount = igstMatch ? this.cleanNumeric(igstMatch[1]) : null;
+    extracted.igst = extracted.igstAmount = igstMatch ? this.cleanNumeric(igstMatch[1], true) : null;
 
+    // GST Information - Rates (Calculate from amounts - more accurate than PDF text)
+    const cgstRateMatch = text.match(patterns.cgst_rate);
+    const sgstRateMatch = text.match(patterns.sgst_rate);
+    const igstRateMatch = text.match(patterns.igst_rate);
+    const taxPercentageMatch = text.match(patterns.tax_percentage);
+
+    // Calculate rates from actual amounts (most accurate)
+    if (extracted.subTotal && extracted.cgst && extracted.cgst > 0) {
+      extracted.cgstRate = parseFloat(((extracted.cgst / extracted.subTotal) * 100).toFixed(2));
+    } else if (cgstRateMatch) {
+      extracted.cgstRate = parseFloat(cgstRateMatch[1] || cgstRateMatch[2]);
+    }
+
+    if (extracted.subTotal && extracted.sgst && extracted.sgst > 0) {
+      extracted.sgstRate = parseFloat(((extracted.sgst / extracted.subTotal) * 100).toFixed(2));
+    } else if (sgstRateMatch) {
+      extracted.sgstRate = parseFloat(sgstRateMatch[1] || sgstRateMatch[2]);
+    }
+
+    if (extracted.subTotal && extracted.igst && extracted.igst > 0) {
+      extracted.igstRate = parseFloat(((extracted.igst / extracted.subTotal) * 100).toFixed(2));
+    } else if (igstRateMatch) {
+      extracted.igstRate = parseFloat(igstRateMatch[1] || igstRateMatch[2]);
+    }
+
+    // Tax Percentage (total GST rate)
+    if (extracted.cgstRate && extracted.sgstRate) {
+      extracted.taxPercentage = parseFloat((extracted.cgstRate + extracted.sgstRate).toFixed(2));
+    } else if (extracted.igstRate) {
+      extracted.taxPercentage = extracted.igstRate;
+    } else if (taxPercentageMatch) {
+      extracted.taxPercentage = parseFloat(taxPercentageMatch[1] || taxPercentageMatch[2]);
+    }
+
+    // Tax Amount (total of all taxes)
+    extracted.taxAmount = 0;
+    if (extracted.cgst) extracted.taxAmount += extracted.cgst;
+    if (extracted.sgst) extracted.taxAmount += extracted.sgst;
+    if (extracted.igst) extracted.taxAmount += extracted.igst;
+    if (extracted.taxAmount === 0) extracted.taxAmount = null;
+
+    // Tax Name
+    if (extracted.taxPercentage) {
+      extracted.taxName = `GST${Math.round(extracted.taxPercentage)}`;
+    }
+
+    // GSTIN & Tax Information
     const customerGstinMatch = text.match(patterns.customer_gstin);
     extracted.customerGstin = customerGstinMatch ? customerGstinMatch[1].trim() : null;
 
+    const vendorGstinMatch = text.match(patterns.vendor_gstin);
+    // Map to customerGstin if not found, as column 60 is usually Customer GSTIN in reports
+    if (!extracted.customerGstin && vendorGstinMatch) {
+       extracted.customerGstin = vendorGstinMatch[1].trim();
+    }
+    // Keep vendorGstin separate
+    extracted.vendorGstin = vendorGstinMatch ? vendorGstinMatch[1].trim() : null;
+    // Set gstin to customerGstin for the main column
+    extracted.gstin = extracted.customerGstin;
+
+    const customerPanMatch = text.match(patterns.customer_pan);
+    extracted.customerPan = customerPanMatch ? customerPanMatch[1].trim() : null;
+
+    const irnCodeMatch = text.match(patterns.irn_code);
+    extracted.irnCode = irnCodeMatch ? irnCodeMatch[1].trim() : null;
+
+    // HSN/SAC Code
     const hsnSacMatch = text.match(patterns.hsn_sac);
-    extracted.hsnSac = hsnSacMatch ? hsnSacMatch[1].trim() : null;
+    extracted.hsnSac = hsnSacMatch ? hsnSacMatch[1].trim() : '998422';
 
+    // Location & Supply Information (Clean up extra text)
     const placeOfSupplyMatch = text.match(patterns.place_of_supply);
-    extracted.sourceOfSupply = extracted.destinationOfSupply = placeOfSupplyMatch ? placeOfSupplyMatch[1].trim() : 'India';
+    if (placeOfSupplyMatch) {
+      let place = placeOfSupplyMatch[1].trim();
+      // Clean up common suffixes
+      place = place.replace(/\s*(State Code|STATE CODE)\s*$/i, '').trim();
+      // For Airtel, use "India" if state-specific
+      extracted.sourceOfSupply = extracted.destinationOfSupply = 'India';
+      extracted.state = extracted.locationName = place;
+    } else {
+      extracted.sourceOfSupply = extracted.destinationOfSupply = 'India';
+    }
 
+    const stateMatch = text.match(patterns.state);
+    if (stateMatch) {
+      const stateName = stateMatch[1].trim();
+      if (!extracted.state) {
+        extracted.state = extracted.locationName = stateName;
+      }
+    }
+
+    const branchMatch = text.match(patterns.branch);
+    extracted.branchName = branchMatch ? branchMatch[1].trim() : null;
+
+    // Service Details
+    const serviceDescriptionMatch = text.match(patterns.service_description);
+    extracted.description = serviceDescriptionMatch ? serviceDescriptionMatch[1].trim() : null;
+
+    const itemNameMatch = text.match(patterns.item_name);
+    extracted.itemName = itemNameMatch ? itemNameMatch[1].trim() : extracted.description;
+
+    // Remove default itemName to avoid incorrect population
+    // if (!extracted.itemName) {
+    //   extracted.itemName = 'Telecom Services - Airtel';
+    // }
+
+    // Account & Circuit Information
     const accountNumberMatch = text.match(patterns.account_number);
     extracted.accountNumber = extracted.relationshipNumber = accountNumberMatch ? accountNumberMatch[1].trim() : null;
 
-    const internalIdMatch = text.match(patterns.internal_id);
-    extracted.billId = internalIdMatch ? internalIdMatch[1].trim() : null;
+    const circuitIdMatch = text.match(patterns.circuit_id);
+    extracted.circuitId = extracted.vendorCircuitId = circuitIdMatch ? circuitIdMatch[1].trim() : null;
+
+    const serviceIdMatch = text.match(patterns.service_id);
+    if (!extracted.circuitId && serviceIdMatch) {
+      extracted.circuitId = extracted.vendorCircuitId = serviceIdMatch[1].trim();
+    }
+
+    // Bandwidth
+    const bandwidthMatch = text.match(patterns.bandwidth);
+    extracted.bandwidth = extracted.bandwidthMbps = bandwidthMatch ? parseFloat(bandwidthMatch[1]) : null;
+
+    // Bill Period Dates
+    const billPeriodFromMatch = text.match(patterns.bill_period_from);
+    extracted.billPeriodFrom = billPeriodFromMatch ? this.formatDate(billPeriodFromMatch[1]) : null;
+
+    const billPeriodToMatch = text.match(patterns.bill_period_to);
+    extracted.billPeriodTo = billPeriodToMatch ? this.formatDate(billPeriodToMatch[1]) : null;
+
+    // Additional Information
+    const vendorNotesMatch = text.match(patterns.vendor_notes);
+    extracted.vendorNotes = vendorNotesMatch ? vendorNotesMatch[1].trim().substring(0, 200) : '';
+
+    const termsConditionsMatch = text.match(patterns.terms_conditions);
+    extracted.termsConditions = termsConditionsMatch ? termsConditionsMatch[1].trim().substring(0, 200) : '';
 
     // Default Values
     extracted.currencyCode = airtelTemplate.defaults.currency_code;
@@ -393,19 +541,8 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
     extracted.quantity = 1;
     extracted.usageUnit = 'Month';
     extracted.itemType = 'Service';
-    extracted.sourceOfSupply = 'India';
-    extracted.destinationOfSupply = 'India';
-
-    // Calculate tax rates if amounts are available
-    if (extracted.subTotal && extracted.cgst) {
-      extracted.cgstRate = ((extracted.cgst / extracted.subTotal) * 100).toFixed(2);
-    }
-    if (extracted.subTotal && extracted.sgst) {
-      extracted.sgstRate = ((extracted.sgst / extracted.subTotal) * 100).toFixed(2);
-    }
-    if (extracted.subTotal && extracted.igst) {
-      extracted.igstRate = ((extracted.igst / extracted.subTotal) * 100).toFixed(2);
-    }
+    extracted.balance = 0;
+    extracted.itemTotal = extracted.total;
 
     return extracted;
   }
@@ -979,10 +1116,19 @@ Return ONLY a valid JSON object with the extracted data. Use null for missing fi
 
   /**
    * Clean numeric values
+   * @param {string|number} value - The value to clean
+   * @param {boolean} excludeYears - Whether to exclude values that look like years (2020-2030)
    */
-  cleanNumeric(value) {
+  cleanNumeric(value, excludeYears = false) {
     if (!value) return null;
-    return parseFloat(value.toString().replace(/,/g, ''));
+    const num = parseFloat(value.toString().replace(/,/g, ''));
+    
+    // Check if it's a year (e.g. 2024, 2025) if requested
+    if (excludeYears && Number.isInteger(num) && num >= 2020 && num <= 2030) {
+      return null;
+    }
+    
+    return num;
   }
 
   /**

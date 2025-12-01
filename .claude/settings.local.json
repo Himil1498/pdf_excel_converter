@@ -48,7 +48,9 @@
       "Bash(find:*)",
       "Bash(npm install:*)",
       "Bash(npm run help:grid:*)",
-      "Bash(ascend_pdf_sample1.txt)"
+      "Bash(ascend_pdf_sample1.txt)",
+      "Bash(move read_airtel_excel.js backendread_airtel_excel.js)",
+      "Bash(ipconfig:*)"
     ],
     "deny": [],
     "ask": []
